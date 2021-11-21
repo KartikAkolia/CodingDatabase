@@ -27,4 +27,3 @@ while ctr <= 5:
     #    ctr=ctr+1
 if ctr==6:
     print("You couldn't guess the number \n Good Luck Next Time ")
-    print("END")
