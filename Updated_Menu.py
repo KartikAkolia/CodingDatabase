@@ -1,5 +1,5 @@
 class menu:
-    import mysql.connector
+    import mysql.connector 
     import os
 
     def __init__(self,ch):
@@ -85,18 +85,18 @@ class menu:
 
     def Service_Status(self):
         cursor = self.mydb.cursor()
-        cursor.execute("DELETE FROM  Service")
+        cursor.execute("DELETE FROM  Services")
         self.mydb.commit()
         cursor.close()
         query=self.os.system("/etc/init.d/ssh status | grep -i running 1>/dev/null 2>/dev/null")
         if query>0:
             cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Service VALUES('SSH','Not Running', 'Y')")
+            cursor.execute("INSERT INTO Services VALUES('SSH','Not Running', 'Y')")
             print("SSH Is Not Running Please Check")
             input("Press Any Key")
         else:
             cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Service VALUES('SSH','Running', 'N')")
+            cursor.execute("INSERT INTO Services VALUES('SSH','Running', 'N')")
             print("SSH Is Up And Running")
             input("Press Any Key")
         self.mydb.commit()
@@ -105,12 +105,12 @@ class menu:
         query=self.os.system("/etc/init.d/apache2 status | grep -i running 1>/dev/null 2>/dev/null")
         if query>0:
             cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Service VALUES('Apache','Not Running', 'Y')")
+            cursor.execute("INSERT INTO Services VALUES('Apache','Not Running', 'Y')")
             print("Apache Is Not Running Please Check")
             input("Press Any Key")
         else:
             cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Service VALUES('Apache','Running', 'N')")
+            cursor.execute("INSERT INTO Services VALUES('Apache','Running', 'N')")
             print("Apache Is Up And Running")
             input("Press Any Key")
         self.mydb.commit()
@@ -119,12 +119,12 @@ class menu:
         query=self.os.system("/etc/init.d/mysql status | grep -i running 1>/dev/null 2>/dev/null")
         if query>0:
             cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Service VALUES('MSSQL','Not Running', 'Y')")
+            cursor.execute("INSERT INTO Services VALUES('MSSQL','Not Running', 'Y')")
             print("MSSQL Is Not Running Please Check")
             input("Press Any Key")
         else:
             cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Service VALUES('MSSQL','Running', 'N')")
+            cursor.execute("INSERT INTO Services VALUES('MSSQL','Running', 'N')")
             print("MSSQL Is Up And Running")
             input("Press Any Key")
         self.mydb.commit()
@@ -132,7 +132,7 @@ class menu:
 
     def Show_Service_Status(self):
         mycursor = self.mydb.cursor()
-        mycursor.execute("SELECT Name, Status FROM Service")
+        mycursor.execute("SELECT Name, Status FROM Services")
         myresult = mycursor.fetchall()
         for x in myresult:
             print(x)
@@ -153,7 +153,7 @@ class menu:
         print(show_s)
         self.os.system(show_s)
     
-    def Restart_Service(self,name):
+    def Restart_Services(self,name):
         restart_s="/etc/init.d/"+ name + " restart 1"
         print(restart_s)
         self.os.system(restart_s)
@@ -168,11 +168,11 @@ while m.ch != '3':
   print("6. Revert")
   print("7. Others")
   print("8. Exit")
-  print("9 Service")
-  print("10 Show_Service_Status")
-  print("11 Start_Service")
-  print("12 Stop_Service")
-  print("13 Restart_Service")
+  print("9 Services")
+  print("10 Show_Services_Status")
+  print("11 Start_Services")
+  print("12 Stop_Services")
+  print("13 Restart_Services")
   
   m.ch=input("Enter Your Choice")
   if m.ch=='8':
@@ -193,16 +193,16 @@ while m.ch != '3':
     i=m.get_tablename()
     print(i)
   if m.ch=='9':
-    m.Service_Status()
+    m.Services_Status()
   if m.ch=='10':
-    name=input("Which service see the status?")
+    name=input("Which Services see the status?")
     m.Show_Service(name)
   if m.ch=='11':
-    name=input("Which service to start?")
+    name=input("Which Services to start?")
     m.Start_Service(name)
   if m.ch=='12':
-       name=input("Which service to stop?")
+       name=input("Which Services to stop?")
        m.Stop_Service(name)
   if m.ch=='13':
-      name=input("Which service to restart?")
+      name=input("Which Services to restart?")
       m.Restart_Service(name)
