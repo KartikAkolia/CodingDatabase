@@ -18,9 +18,6 @@ while True:
         print("Hello There " + u)
     else:
         ctr=ctr+1
-    #if (u!=username[0] or u!=username[1] or u!=username[2]) and (p!=password[0] or p!=password[1] or p!=password[2]):
-    #    print("Please Enter either username or password again, First Entry Used, the Maximum Attempts is three")
-    #    ctr=ctr+1
     if ctr>3:
         print("Maximum Entries Entered Please try again later")
         exit()
