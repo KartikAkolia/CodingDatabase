@@ -22,5 +22,3 @@ for p in password:
         break
     else:
         break
-print(names1)
-print(password1)
