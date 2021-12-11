@@ -1,6 +1,6 @@
 class Guess_Number:
     import random
-    def x():
+    def x(self):
         ctr=0
 
         while ctr <= 5:
@@ -8,7 +8,7 @@ class Guess_Number:
             if i <0:
                 print("Positive Numbers Only")
                 continue
-            j = random.randint(10, 20)
+            j = self.random.randint(10, 20)
             diff = j - i
             if diff < 0 or diff >0:
                 print("Entered number close to lucky one \n Please try again...")
