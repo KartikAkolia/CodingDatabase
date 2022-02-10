@@ -22,14 +22,6 @@ class GuessNumber:
                 print("Well Done You have guessed the number right")
                 print("The random generated is " + str(j))
                 break
-                # if 0 < diff < 10:
-            #    print("You have almost guessed right number")
-            #    print("The random generated is " + str(j))
-            #    ctr=ctr+1
-            # if diff!=0:
-            #    print("Incorrect Guess.Try Again")
-            #    print(diff)
-            #    ctr=ctr+1
         if ctr == 6:
             print("You couldn't guess the number \n Good Luck Next Time ")
 
