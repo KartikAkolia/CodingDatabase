@@ -16,11 +16,13 @@ def checking():
                 if p!=password[3]:
                     print("Wrong Password Entered")
 checking()
-x=random.randint(0,6)
-value=int(input("Enter A Number"))
-if value > x:
-    score=score+1
-    print( u + " entered value is " + str(value) + " The random value was " + str(x) + " The score is " + str(score))
-if value < x:
-    score=score-1
-    print( u + " entered value is " + str(value) + " The random value was " + str(x) + " The score is " + str(score))
+def stage1():
+    x=random.randint(0,6)
+    value=int(input("Enter A Number"))
+    if value > x:
+        score=score+1
+        print( u + " entered value is " + str(value) + " The random value was " + str(x) + " The score is " + str(score))
+    if value < x:
+        score=score-1
+        print( u + " entered value is " + str(value) + " The random value was " + str(x) + " The score is " + str(score))
+stage1()
