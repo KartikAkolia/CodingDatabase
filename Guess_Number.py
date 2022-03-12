@@ -1,12 +1,9 @@
 class GuessNumber:
     def __init__(self):
         pass
-
     import random
-
     def x(self):
         ctr = 0
-
         while ctr <= 5:
             i = int(input("Enter A Number"))
             if i < 0:
@@ -22,11 +19,9 @@ class GuessNumber:
                 print("Well Done You have guessed the number right")
                 print("The random generated is " + str(j))
                 break
-        if ctr == 6:
-            print("You couldn't guess the number \n Good Luck Next Time ")
+            if ctr == 6:
+                print("You couldn't guess the number \n Good Luck Next Time ")
 
         print("END")
-
-
 n = GuessNumber()
 n.x()
