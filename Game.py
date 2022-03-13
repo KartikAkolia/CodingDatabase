@@ -1,4 +1,4 @@
-
+import random
 score=0
 username=["Admin","Kartik","Person","Guest"]
 password=["admin","KAR14","person","guest"]
