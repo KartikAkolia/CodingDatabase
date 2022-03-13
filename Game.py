@@ -1,4 +1,4 @@
-import random
+
 score=0
 username=["Admin","Kartik","Person","Guest"]
 password=["admin","KAR14","person","guest"]
@@ -26,3 +26,6 @@ def stage1():
         score=score-1
         print( u + " entered value is " + str(value) + " The random value was " + str(x) + " The score is " + str(score))
 stage1()
+replay_game = input("Let's do next calculation? (yes/no): ")
+if replay_game == "no":
+    exit()
