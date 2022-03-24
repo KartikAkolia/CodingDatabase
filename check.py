@@ -24,8 +24,6 @@ while True:
     print("15 /etc/init.d/mysql reload")
     print("16 exit")
     print("17 sudo apt update -y && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean -y && sudo apt autoclean -y")
-    print("18 calc.py")
-    
     ch = input("Enter Your Choice")
     time.sleep(0.3)
     if ch == '1':
