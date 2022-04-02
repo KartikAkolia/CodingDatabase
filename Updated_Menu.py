@@ -153,7 +153,7 @@ class menu:
         print(show_s)
         self.os.system(show_s)
     
-    def Restart_Services(self,name):
+    def Restart_Service(self,name):
         restart_s="/etc/init.d/"+ name + " restart 1"
         print(restart_s)
         self.os.system(restart_s)
@@ -193,7 +193,7 @@ while m.ch != '3':
     i=m.get_tablename()
     print(i)
   if m.ch=='9':
-    m.Services_Status()
+    m.Service_Status()
   if m.ch=='10':
     name=input("Which Services see the status?")
     m.Show_Service(name)
