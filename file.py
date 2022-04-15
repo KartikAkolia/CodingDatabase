@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
-import sys
-import time
 
 #Searching A Word in a text file
 def search_string():
     lines=[]
     flag=False
     i=0
+    result=""
     with open("hello.txt") as flip:
         lines=flip.readlines()
     user=input("Enter word for searching? ")
     for i in range(0,len(lines)-1):
-        if user in lines[i]:
+        if user.upper() in lines[i].upper():
             flag=True
             break
     if flag==True:
-        print(lines[i])
+        y=lines[i].split()
+        i=len(y)-1
+        while i > 0:
+            result=y[i] + ' ' +  result
+            i=i-1
+        print(result)
     else:
         print("String doesn't exist")
-
+    flip.close()
+# Tailing A File
 def tail_file():
     lines=[]
     tail_lines=[]
@@ -33,6 +38,7 @@ def tail_file():
         print (tail_lines[j], end = '')
         j=j-1
 
+# Heading A File
 def head_file():
     lines=[]
     with open("hello.txt") as flip:
