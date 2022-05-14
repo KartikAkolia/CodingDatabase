@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-
+import sys
 #Searching A Word in a text file
 def search_string():
     lines=[]
     flag=False
     i=0
     result=""
-    with open("hello.txt") as flip:
+    with open(sys.argv[1]) as flip:
         lines=flip.readlines()
     user=input("Enter word for searching? ")
     for i in range(0,len(lines)-1):
@@ -27,7 +27,7 @@ def search_string():
 def tail_file():
     lines=[]
     tail_lines=[]
-    with open("hello.txt") as flip:
+    with open(sys.argv[1]) as flip:
         lines=flip.readlines()
     i=len(lines)-1
     while i >= len(lines)-2:
@@ -41,7 +41,7 @@ def tail_file():
 # Heading A File
 def head_file():
     lines=[]
-    with open("hello.txt") as flip:
+    with open(sys.argv[1]) as flip:
         lines=flip.readlines()
     i=len(lines)-3
     while int(i) <= int(len(lines)-1):
