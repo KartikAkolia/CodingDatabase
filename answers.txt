@@ -1,0 +1,10 @@
+Answers
+Hello:Hello There
+How are you:I am fine thanks for asking.
+favourite color: blue
+check:check.py
+menu:New_Updated_Menu.py
+file:file.py
+math:math.py
+bash:bash
+chat:chat
