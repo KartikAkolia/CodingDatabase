@@ -6,7 +6,7 @@ class menu:
         self.ch = 3
         self.mydb = self.mysql.connector.connect(
             host="localhost",
-            user="kartik",
+            user="root",
             password="Kartik84@",
             database="KARTIK",
             port=3306,
