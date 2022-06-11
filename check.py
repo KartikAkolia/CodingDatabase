@@ -79,3 +79,6 @@ def checkpy():
             ]
         )
         input("Press Any Key To Continue")
+
+
+checkpy()
