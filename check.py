@@ -21,7 +21,7 @@ while True:
     print("16 sudo apt update -y && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean -y && sudo apt autoclean -y")
     print("17 exit")
     ch = "0"
-    
+    ch=input("Enter Your Choice")
     if ch == "1":
         os.system("1 /etc/init.d/ssh status")
     if ch == "2":
