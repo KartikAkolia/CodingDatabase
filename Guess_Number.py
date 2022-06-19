@@ -1,7 +1,9 @@
 class GuessNumber:
     def __init__(self):
         pass
+
     import random
+
     def x(self):
         ctr = 0
         while ctr <= 5:
@@ -23,5 +25,7 @@ class GuessNumber:
                 print("You couldn't guess the number \n Good Luck Next Time ")
 
         print("END")
+
+
 n = GuessNumber()
 n.x()
