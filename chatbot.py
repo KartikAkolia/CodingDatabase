@@ -43,18 +43,6 @@ def chat():
     send_msg(msg, dest)
 
 
-def init():
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        l.append(filename)
-    l.sort()
-    print(l)
-    ctr = len(l) - 2
-    first_destination = "/dev/pts/" + str(l[ctr])
-    "/dev/pts/" + str(l[ctr - 1])
-    print(first_destination, destination)
-
-
 def search_string(ch, filename):
     flag = False
     i = 0
@@ -80,7 +68,7 @@ def search_string(ch, filename):
 
 
 print("Welcome To Python3_ChatBot")
-#init()
+
 while True:
     q = input("$")
     print(q)
