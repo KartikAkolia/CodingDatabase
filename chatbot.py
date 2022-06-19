@@ -4,7 +4,7 @@ import subprocess
 
 l = []
 source = ""
-dest = ""
+destination = ""
 
 directory = os.fsencode("/dev/pts")
 
@@ -34,7 +34,7 @@ def chat():
         l.append(filename)
     l.sort()
     ctr = len(l) - 2
-    source = "/dev/pts/" + str(l[ctr])
+    "/dev/pts/" + str(l[ctr])
     dest = "/dev/pts/" + str(l[ctr - 1])
     os.system("clear")
     msg = input("$")
@@ -50,18 +50,17 @@ def init():
     l.sort()
     print(l)
     ctr = len(l) - 2
-    source = "/dev/pts/" + str(l[ctr])
-    dest = "/dev/pts/" + str(l[ctr - 1])
-    print(source, dest)
+    first_destination = "/dev/pts/" + str(l[ctr])
+    "/dev/pts/" + str(l[ctr - 1])
+    print(first_destination, destination)
 
 
 def search_string(ch, filename):
-    lines = []
     flag = False
     i = 0
     result = ""
-    user = ""
-    y = ""
+    ""
+    ""
     with open(filename) as flip:
         lines = flip.readlines()
     user = ch.upper()
@@ -78,13 +77,14 @@ def search_string(ch, filename):
         return result
     else:
         return "0"
-    flip.close()
 
 
 print("Welcome To Python3_ChatBot")
 # init()
 while True:
+    print("Coming Here in While")
     q = input("$")
+    print(q)
     s = search_string(q, "answers.txt")
     if s == "0":
         exit()
@@ -94,8 +94,8 @@ while True:
         subprocess.run(["python3", "New_Updated_Menu.py"])
     elif "FILE" in s.upper():
         subprocess.run(["python3", "file.py", "data.txt"])
-    elif "MATH" in s.upper():
-        subprocess.run(["python3", "math.py"])
+    #elif "MATH" in s.upper():
+    #    subprocess.run(["python3", "math.py"])
     elif "BASH" in s.upper():
         bash()
     elif "CHAT" in s.upper():
