@@ -3,6 +3,7 @@ class menu:
     import os
 
     def __init__(self, ch):
+        self.ch = ch
         self.ch = 3
         self.mydb = self.mysql.connector.connect(
             host="localhost",
