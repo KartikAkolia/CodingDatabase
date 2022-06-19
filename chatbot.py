@@ -80,9 +80,8 @@ def search_string(ch, filename):
 
 
 print("Welcome To Python3_ChatBot")
-# init()
+#init()
 while True:
-    print("Coming Here in While")
     q = input("$")
     print(q)
     s = search_string(q, "answers.txt")
@@ -94,8 +93,6 @@ while True:
         subprocess.run(["python3", "New_Updated_Menu.py"])
     elif "FILE" in s.upper():
         subprocess.run(["python3", "file.py", "data.txt"])
-    #elif "MATH" in s.upper():
-    #    subprocess.run(["python3", "math.py"])
     elif "BASH" in s.upper():
         bash()
     elif "CHAT" in s.upper():
