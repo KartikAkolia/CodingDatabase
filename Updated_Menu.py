@@ -2,6 +2,12 @@ import mysql.connector
 import os
 
 class Menu:
+    TABLE_MAPPING = {
+        "Chess": 2,
+        "UNO": 1,
+        "Carrom": 3
+    }
+
     def __init__(self):
         self.mydb = None
         self.cursor = None
@@ -29,16 +35,11 @@ class Menu:
             print("Disconnected from the database!")
 
     def get_table_name(self, game):
-        if game == "Chess":
-            counter = 2
-        elif game == "UNO":
-            counter = 1
-        elif game == "Carrom":
-            counter = 3
-        else:
+        table_id = self.TABLE_MAPPING.get(game)
+        if table_id is None:
             return None
-        
-        self.cursor.execute("SELECT NAME FROM Inventory WHERE ID=%s", (counter,))
+
+        self.cursor.execute("SELECT NAME FROM Inventory WHERE ID = %s", (table_id,))
         result = self.cursor.fetchone()
         return result[0] if result else None
 
@@ -52,12 +53,11 @@ class Menu:
         score = input("Enter the Score: ")
 
         try:
-            query = "SELECT COUNT(*) FROM {} WHERE CODE=%s".format(tablename)
+            query = "SELECT COUNT(*) FROM {} WHERE CODE = %s".format(tablename)
             self.cursor.execute(query, (name[0:1],))
             result = self.cursor.fetchone()
             if result[0] > 0:
                 print("Record Already Exists")
-                print(self.cursor.rowcount)
             else:
                 query = "INSERT INTO {} (name, score, code) VALUES (%s, %s, %s)".format(tablename)
                 self.cursor.execute(query, (name, score, name[0:1]))
@@ -146,29 +146,20 @@ class Menu:
             self.cursor.execute("DELETE FROM Services")
             self.mydb.commit()
 
-            query = os.system("/etc/init.d/ssh status | grep -i running 1>/dev/null 2>/dev/null")
-            if query > 0:
-                self.cursor.execute("INSERT INTO Services VALUES('SSH','Not Running', 'Y')")
-                print("SSH Is Not Running Please Check")
-            else:
-                self.cursor.execute("INSERT INTO Services VALUES('SSH','Running', 'N')")
-                print("SSH Is Up And Running")
+            services = {
+                "SSH": "ssh",
+                "Apache": "apache2",
+                "MSSQL": "mysql"
+            }
 
-            query = os.system("/etc/init.d/apache2 status | grep -i running 1>/dev/null 2>/dev/null")
-            if query > 0:
-                self.cursor.execute("INSERT INTO Services VALUES('Apache','Not Running', 'Y')")
-                print("Apache Is Not Running Please Check")
-            else:
-                self.cursor.execute("INSERT INTO Services VALUES('Apache','Running', 'N')")
-                print("Apache Is Up And Running")
-
-            query = os.system("/etc/init.d/mysql status | grep -i running 1>/dev/null 2>/dev/null")
-            if query > 0:
-                self.cursor.execute("INSERT INTO Services VALUES('MSSQL','Not Running', 'Y')")
-                print("MSSQL Is Not Running Please Check")
-            else:
-                self.cursor.execute("INSERT INTO Services VALUES('MSSQL','Running', 'N')")
-                print("MSSQL Is Up And Running")
+            for service_name, service_cmd in services.items():
+                query = os.system("/etc/init.d/{} status | grep -i running 1>/dev/null 2>/dev/null".format(service_cmd))
+                if query > 0:
+                    self.cursor.execute("INSERT INTO Services VALUES(%s, 'Not Running', 'Y')", (service_name,))
+                    print("{} Is Not Running. Please Check.".format(service_name))
+                else:
+                    self.cursor.execute("INSERT INTO Services VALUES(%s, 'Running', 'N')", (service_name,))
+                    print("{} Is Up And Running.".format(service_name))
 
             self.mydb.commit()
         except mysql.connector.Error as error:
@@ -183,25 +174,20 @@ class Menu:
         except mysql.connector.Error as error:
             print("Error occurred while showing service status:", error)
 
-    def start_service(self, name):
-        start_s = "/etc/init.d/" + name + " start"
-        print(start_s)
-        os.system(start_s)
+    def start_stop_restart_service(self, name, action):
+        service_cmd = {
+            "start": "/etc/init.d/{} start",
+            "stop": "/etc/init.d/{} stop 1",
+            "restart": "/etc/init.d/{} restart 1"
+        }
 
-    def stop_service(self, name):
-        stop_s = "/etc/init.d/" + name + " stop 1"
-        print(stop_s)
-        os.system(stop_s)
+        if name not in service_cmd:
+            print("Invalid service!")
+            return
 
-    def show_service(self, name):
-        show_s = "/etc/init.d/" + name + " status"
-        print(show_s)
-        os.system(show_s)
-
-    def restart_service(self, name):
-        restart_s = "/etc/init.d/" + name + " restart 1"
-        print(restart_s)
-        os.system(restart_s)
+        cmd = service_cmd[action].format(name)
+        print(cmd)
+        os.system(cmd)
 
     def run_menu(self):
         self.connect_to_database()
@@ -248,15 +234,14 @@ class Menu:
                 self.service_status()
             elif choice == "10":
                 self.show_service_status()
-            elif choice == "11":
-                name = input("Which service to start? ")
-                self.start_service(name)
-            elif choice == "12":
-                name = input("Which service to stop? ")
-                self.stop_service(name)
-            elif choice == "13":
-                name = input("Which service to restart? ")
-                self.restart_service(name)
+            elif choice in ["11", "12", "13"]:
+                name = input("Enter the service name: ")
+                if choice == "11":
+                    self.start_stop_restart_service(name, "start")
+                elif choice == "12":
+                    self.start_stop_restart_service(name, "stop")
+                elif choice == "13":
+                    self.start_stop_restart_service(name, "restart")
             else:
                 print("Invalid choice!")
 
