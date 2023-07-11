@@ -1,211 +1,267 @@
-class menu:
-    import mysql.connector
-    import os
+import mysql.connector
+import os
 
-    def __init__(self, ch):
-        self.ch = ch
-        self.ch = 3
-        self.mydb = self.mysql.connector.connect(
-            host="localhost",
-            user="kartik",
-            password='Kartik84@',
-            database='KARTIK',
-            port=3306
-        )
+class Menu:
+    def __init__(self):
+        self.mydb = None
+        self.cursor = None
+        self.game = None
 
-    def get_tablename(self):
-        cursor = self.mydb.cursor()
-        cursor.execute("SELECT NAME FROM Inventory WHERE ID=1")
-        result = cursor.fetchone()
-        cursor.close()
-        return result[0]
+    def connect_to_database(self):
+        try:
+            self.mydb = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="Kartik84@",
+                database="KARTIK",
+                port=3306,
+            )
+            self.cursor = self.mydb.cursor()
+            print("Connected to the database!")
+        except mysql.connector.Error as error:
+            print("Failed to connect to the database:", error)
+
+    def close_database_connection(self):
+        if self.cursor:
+            self.cursor.close()
+        if self.mydb and self.mydb.is_connected():
+            self.mydb.close()
+            print("Disconnected from the database!")
+
+    def get_table_name(self, game):
+        if game == "Chess":
+            counter = 2
+        elif game == "UNO":
+            counter = 1
+        elif game == "Carrom":
+            counter = 3
+        else:
+            return None
+        
+        self.cursor.execute("SELECT NAME FROM Inventory WHERE ID=%s", (counter,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
 
     def add_score(self):
-        tablename = self.get_tablename()
-        n = input("Enter The Player Name")
-        s = input("Enter The Score")
-        cursor = self.mydb.cursor()
-        cursor.execute("SELECT COUNT(*) FROM " + tablename + " WHERE CODE='" + n[0:1] + "'")
-        result = cursor.fetchone()
-        if result[0] > 0:
-            print("Record Already Exists")
-            print(cursor.rowcount)
-        else:
-            query = ("insert into " + tablename + " (name,score,code) VALUES (%s,%s,'" + n[0:1] + "')")
-            print(query)
-            cursor.execute(query, (n, s))
-            self.mydb.commit()
-            cursor.close()
+        tablename = self.get_table_name(self.game)
+        if not tablename:
+            print("Invalid game!")
+            return
+
+        name = input("Enter the Player Name: ")
+        score = input("Enter the Score: ")
+
+        try:
+            query = "SELECT COUNT(*) FROM {} WHERE CODE=%s".format(tablename)
+            self.cursor.execute(query, (name[0:1],))
+            result = self.cursor.fetchone()
+            if result[0] > 0:
+                print("Record Already Exists")
+                print(self.cursor.rowcount)
+            else:
+                query = "INSERT INTO {} (name, score, code) VALUES (%s, %s, %s)".format(tablename)
+                self.cursor.execute(query, (name, score, name[0:1]))
+                self.mydb.commit()
+        except mysql.connector.Error as error:
+            print("Error occurred while adding score:", error)
 
     def show_score(self):
-        mycursor = self.mydb.cursor()
-        mycursor.execute("SELECT * FROM UNO")
-        myresult = mycursor.fetchall()
-        for x in myresult:
-            print(x)
-            print(type(myresult))
-            mycursor.close()
+        tablename = self.get_table_name(self.game)
+        if not tablename:
+            print("Invalid game!")
+            return
+
+        try:
+            query = "SELECT * FROM {}".format(tablename)
+            self.cursor.execute(query)
+            myresult = self.cursor.fetchall()
+            for row in myresult:
+                print(row)
+        except mysql.connector.Error as error:
+            print("Error occurred while showing score:", error)
 
     def update_score(self):
-        n = input("Enter The Player Name")
-        if self.mydb.is_connected:
-            print('Connection successfully established!')
-            query = ("UPDATE UNO SET SCORE= score + 1" + " where code='" + n[0:1] + "'")
-            print(query)
-            cursor = self.mydb.cursor()
-            cursor.execute(query)
+        tablename = self.get_table_name(self.game)
+        if not tablename:
+            print("Invalid game!")
+            return
+
+        name = input("Enter the Player Name: ")
+
+        try:
+            query = "UPDATE {} SET SCORE = SCORE + 1 WHERE code=%s".format(tablename)
+            self.cursor.execute(query, (name[0:1],))
             self.mydb.commit()
+        except mysql.connector.Error as error:
+            print("Error occurred while updating score:", error)
 
     def revert(self):
-        query = "DELETE FROM Logs WHERE LOGDATE=CURDATE()"
-        cursor = self.mydb.cursor()
-        cursor.execute(query)
-        query = "INSERT INTO Logs SELECT NAME,SCORE,CURDATE() FROM UNO"
-        cursor = self.mydb.cursor()
-        cursor.execute(query)
-        query = "UPDATE UNO SET SCORE=0"
-        print(query)
-        cursor = self.mydb.cursor()
-        cursor.execute(query)
-        self.mydb.commit()
-        cursor.close()
+        tablename = self.get_table_name(self.game)
+        if not tablename:
+            print("Invalid game!")
+            return
+
+        try:
+            query = "DELETE FROM Logs WHERE LOGDATE = CURDATE()"
+            self.cursor.execute(query)
+
+            query = "INSERT INTO Logs SELECT NAME, SCORE, CURDATE() FROM UNO"
+            self.cursor.execute(query)
+
+            query = "UPDATE {} SET SCORE = 0".format(tablename)
+            self.cursor.execute(query)
+
+            self.mydb.commit()
+        except mysql.connector.Error as error:
+            print("Error occurred while reverting:", error)
 
     def reset_score(self):
-        query = "UPDATE UNO SET SCORE=0"
-        print(query)
-        cursor = self.mydb.cursor()
-        cursor.execute(query)
-        self.mydb.commit()
-        cursor.close()
+        tablename = self.get_table_name(self.game)
+        if not tablename:
+            print("Invalid game!")
+            return
+
+        try:
+            query = "UPDATE {} SET SCORE = 0".format(tablename)
+            self.cursor.execute(query)
+            self.mydb.commit()
+        except mysql.connector.Error as error:
+            print("Error occurred while resetting score:", error)
 
     def housekeep(self):
-        query = "DELETE FROM UNO"
-        cursor = self.mydb.cursor()
-        cursor.execute(query)
-        self.mydb.commit()
-        cursor.close()
+        tablename = self.get_table_name(self.game)
+        if not tablename:
+            print("Invalid game!")
+            return
 
-    def Service_Status(self):
-        cursor = self.mydb.cursor()
-        cursor.execute("DELETE FROM  Services")
-        self.mydb.commit()
-        cursor.close()
-        query = self.os.system("/etc/init.d/ssh status | grep -i running 1>/dev/null 2>/dev/null")
-        if query > 0:
-            cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Services VALUES('SSH','Not Running', 'Y')")
-            print("SSH Is Not Running Please Check")
-            input("Press Any Key")
-        else:
-            cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Services VALUES('SSH','Running', 'N')")
-            print("SSH Is Up And Running")
-            input("Press Any Key")
-        self.mydb.commit()
-        cursor.close()
+        try:
+            query = "DELETE FROM {}".format(tablename)
+            self.cursor.execute(query)
+            self.mydb.commit()
+        except mysql.connector.Error as error:
+            print("Error occurred while performing housekeeping:", error)
 
-        query = self.os.system("/etc/init.d/apache2 status | grep -i running 1>/dev/null 2>/dev/null")
-        if query > 0:
-            cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Services VALUES('Apache','Not Running', 'Y')")
-            print("Apache Is Not Running Please Check")
-            input("Press Any Key")
-        else:
-            cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Services VALUES('Apache','Running', 'N')")
-            print("Apache Is Up And Running")
-            input("Press Any Key")
-        self.mydb.commit()
-        cursor.close()
+    def service_status(self):
+        try:
+            self.cursor.execute("DELETE FROM Services")
+            self.mydb.commit()
 
-        query = self.os.system("/etc/init.d/mysql status | grep -i running 1>/dev/null 2>/dev/null")
-        if query > 0:
-            cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Services VALUES('MSSQL','Not Running', 'Y')")
-            print("MSSQL Is Not Running Please Check")
-            input("Press Any Key")
-        else:
-            cursor = self.mydb.cursor()
-            cursor.execute("INSERT INTO Services VALUES('MSSQL','Running', 'N')")
-            print("MSSQL Is Up And Running")
-            input("Press Any Key")
-        self.mydb.commit()
-        cursor.close()
+            query = os.system("/etc/init.d/ssh status | grep -i running 1>/dev/null 2>/dev/null")
+            if query > 0:
+                self.cursor.execute("INSERT INTO Services VALUES('SSH','Not Running', 'Y')")
+                print("SSH Is Not Running Please Check")
+            else:
+                self.cursor.execute("INSERT INTO Services VALUES('SSH','Running', 'N')")
+                print("SSH Is Up And Running")
 
-    def Show_Service_Status(self):
-        mycursor = self.mydb.cursor()
-        mycursor.execute("SELECT Name, Status FROM Services")
-        myresult = mycursor.fetchall()
-        for x in myresult:
-            print(x)
-            mycursor.close()
+            query = os.system("/etc/init.d/apache2 status | grep -i running 1>/dev/null 2>/dev/null")
+            if query > 0:
+                self.cursor.execute("INSERT INTO Services VALUES('Apache','Not Running', 'Y')")
+                print("Apache Is Not Running Please Check")
+            else:
+                self.cursor.execute("INSERT INTO Services VALUES('Apache','Running', 'N')")
+                print("Apache Is Up And Running")
 
-    def Start_Service(self, name):
+            query = os.system("/etc/init.d/mysql status | grep -i running 1>/dev/null 2>/dev/null")
+            if query > 0:
+                self.cursor.execute("INSERT INTO Services VALUES('MSSQL','Not Running', 'Y')")
+                print("MSSQL Is Not Running Please Check")
+            else:
+                self.cursor.execute("INSERT INTO Services VALUES('MSSQL','Running', 'N')")
+                print("MSSQL Is Up And Running")
+
+            self.mydb.commit()
+        except mysql.connector.Error as error:
+            print("Error occurred while checking service status:", error)
+
+    def show_service_status(self):
+        try:
+            self.cursor.execute("SELECT Name, Status FROM Services")
+            myresult = self.cursor.fetchall()
+            for row in myresult:
+                print(row)
+        except mysql.connector.Error as error:
+            print("Error occurred while showing service status:", error)
+
+    def start_service(self, name):
         start_s = "/etc/init.d/" + name + " start"
         print(start_s)
-        self.os.system(start_s)
+        os.system(start_s)
 
-    def Stop_Service(self, name):
+    def stop_service(self, name):
         stop_s = "/etc/init.d/" + name + " stop 1"
         print(stop_s)
-        self.os.system(stop_s)
+        os.system(stop_s)
 
-    def Show_Service(self, name):
+    def show_service(self, name):
         show_s = "/etc/init.d/" + name + " status"
         print(show_s)
-        self.os.system(show_s)
+        os.system(show_s)
 
-    def Restart_Service(self, name):
+    def restart_service(self, name):
         restart_s = "/etc/init.d/" + name + " restart 1"
         print(restart_s)
-        self.os.system(restart_s)
+        os.system(restart_s)
+
+    def run_menu(self):
+        self.connect_to_database()
+        self.game = input("Enter the Game being played: ")
+
+        while True:
+            print("1. Add Score")
+            print("2. Show Score")
+            print("3. Update Score")
+            print("4. Reset Score")
+            print("5. Housekeeping")
+            print("6. Revert")
+            print("7. Others")
+            print("8. Exit")
+            print("9. Services")
+            print("10. Show Services Status")
+            print("11. Start Services")
+            print("12. Stop Services")
+            print("13. Restart Services")
+
+            choice = input("Enter your choice: ")
+
+            if choice == "8":
+                break
+            elif choice == "1":
+                self.add_score()
+            elif choice == "2":
+                self.show_score()
+            elif choice == "3":
+                self.update_score()
+            elif choice == "4":
+                self.reset_score()
+            elif choice == "5":
+                self.housekeep()
+            elif choice == "6":
+                self.revert()
+            elif choice == "7":
+                table_name = self.get_table_name(self.game)
+                if table_name:
+                    print(table_name)
+                else:
+                    print("Invalid game!")
+            elif choice == "9":
+                self.service_status()
+            elif choice == "10":
+                self.show_service_status()
+            elif choice == "11":
+                name = input("Which service to start? ")
+                self.start_service(name)
+            elif choice == "12":
+                name = input("Which service to stop? ")
+                self.stop_service(name)
+            elif choice == "13":
+                name = input("Which service to restart? ")
+                self.restart_service(name)
+            else:
+                print("Invalid choice!")
+
+        self.close_database_connection()
 
 
-m = menu(3)
-while m.ch != '3':
-    print("1 add_score")
-    print("2 show_score")
-    print("3 update_score")
-    print("4. Reset Score")
-    print("5. Housekeeping")
-    print("6. Revert")
-    print("7. Others")
-    print("8. Exit")
-    print("9 Services")
-    print("10 Show_Services_Status")
-    print("11 Start_Services")
-    print("12 Stop_Services")
-    print("13 Restart_Services")
-
-    m.ch = input("Enter Your Choice")
-    if m.ch == '8':
-        exit()
-    if m.ch == '1':
-        m.add_score()
-    if m.ch == '2':
-        m.show_score()
-    if m.ch == '3':
-        m.update_score()
-    if m.ch == '4':
-        m.reset_score()
-    if m.ch == '5':
-        m.housekeep()
-    if m.ch == '6':
-        m.revert()
-    if m.ch == '7':
-        i = m.get_tablename()
-        print(i)
-    if m.ch == '9':
-        m.Service_Status()
-    if m.ch == '10':
-        name = input("Which Services see the status?")
-        m.Show_Service(name)
-    if m.ch == '11':
-        name = input("Which Services to start?")
-        m.Start_Service(name)
-    if m.ch == '12':
-        name = input("Which Services to stop?")
-        m.Stop_Service(name)
-    if m.ch == '13':
-        name = input("Which Services to restart?")
-        m.Restart_Service(name)
+m = Menu()
+m.run_menu()
