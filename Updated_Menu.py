@@ -17,7 +17,7 @@ class Menu:
         try:
             self.mydb = mysql.connector.connect(
                 host="localhost",
-                user="root",
+                user="kartik",
                 password="Kartik84@",
                 database="KARTIK",
                 port=3306,
