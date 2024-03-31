@@ -1,66 +1,64 @@
 import os
+import subprocess
+
+# Define the services and their corresponding commands
+SERVICES = {
+    "1": {"name": "ssh", "command": "/etc/init.d/ssh"},
+    "2": {"name": "apache2", "command": "/etc/init.d/apache2"},
+    "3": {"name": "mysql", "command": "/etc/init.d/mysql"}
+}
+
+# Define the actions that can be performed on the services
+ACTIONS = {
+    "1": "status",
+    "2": "start",
+    "3": "stop",
+    "4": "restart"
+}
 
 def print_menu():
-    print("1 /etc/init.d/ssh status")
-    print("2 /etc/init.d/ssh start")
-    print("3 /etc/init.d/ssh stop")
-    print("4 /etc/init.d/ssh restart")
-    print("5 /etc/init.d/apache2 status")
-    print("6 /etc/init.d/apache2 start")
-    print("7 /etc/init.d/apache2 stop")
-    print("8 /etc/init.d/apache2 restart")
-    print("9 /etc/init.d/mysql status")
-    print("10 /etc/init.d/mysql start")
-    print("11 /etc/init.d/mysql stop")
-    print("12 /etc/init.d/mysql restart")
-    print("13 Update and Upgrade")
-    print("14 Exit")
+    # Print the available services
+    print("Select a service:")
+    for key, service in SERVICES.items():
+        print(f"{key} {service['name']}")
+    print("4 Update and Upgrade")
+    print("5 Exit")
 
+def print_actions():
+    # Print the available actions
+    print("Select an action:")
+    for key, action in ACTIONS.items():
+        print(f"{key} {action}")
 
 def execute_command(command):
-    os.system(command)
+    # Execute the command and handle any errors
+    try:
+        subprocess.check_call(command, shell=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Command `{command}` failed with exit status {e.returncode}")
 
 def main():
     while True:
         print_menu()
-        choice = input("Enter Your Choice: ")
+        service_choice = input("Enter Your Choice: ")
 
-        if choice == "1":
-            execute_command("/etc/init.d/ssh status")
-        elif choice == "2":
-            execute_command("/etc/init.d/apache2 status")
-        elif choice == "3":
-            execute_command("/etc/init.d/mysql status")
-        elif choice == "4":
-            execute_command("/etc/init.d/ssh start")
-        elif choice == "5":
-            execute_command("/etc/init.d/apache2 start")
-        elif choice == "6":
-            execute_command("/etc/init.d/mysql start")
-        elif choice == "7":
-            execute_command("/etc/init.d/ssh stop")
-        elif choice == "8":
-            execute_command("/etc/init.d/apache2 stop")
-        elif choice == "9":
-            execute_command("/etc/init.d/mysql stop")
-        elif choice == "10":
-            execute_command("/etc/init.d/ssh restart")
-        elif choice == "11":
-            execute_command("/etc/init.d/apache2 restart")
-        elif choice == "12":
-            execute_command("/etc/init.d/mysql restart")
-        elif choice == "13":
-            execute_command("/etc/init.d/ssh reload")
-        elif choice == "14":
-            execute_command("/etc/init.d/apache2 reload")
-        elif choice == "15":
-            execute_command("/etc/init.d/mysql reload")
-        elif choice == "16":
+        if service_choice == "4":
+            # Perform system update and upgrade
             execute_command("sudo apt update -y && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean -y && sudo apt autoclean -y")
-        elif choice == "17":
+        elif service_choice == "5":
+            # Exit the program
             break
+        elif service_choice in SERVICES:
+            print_actions()
+            action_choice = input("Enter Your Choice: ")
+            if action_choice in ACTIONS:
+                # Construct the command and execute it
+                command = f"{SERVICES[service_choice]['command']} {ACTIONS[action_choice]}"
+                execute_command(command)
+            else:
+                print("Invalid action choice. Please try again.")
         else:
-            print("Invalid choice. Please try again.")
+            print("Invalid service choice. Please try again.")
 
 if __name__ == "__main__":
     main()
