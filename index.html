@@ -4,45 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My LinkHub</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Title of the website -->
-    <h1 class="site-title">LinkHub</h1>
+    <!-- Main Container -->
+    <div class="container py-5">
+        <!-- Title -->
+        <h1 class="site-title text-center mb-4">LinkHub</h1>
 
-    <!-- Table for Common Links -->
-    <h2 class="table-title">Common Links</h2>
-    <table class="link-table">
-        <thead>
-            <tr>
-                <th>Link Name</th>
-                <th>URL</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><a href="https://www.google.com/" target="_blank">Google</a></td>
-                <td><a href="https://www.google.com/" target="_blank">https://www.google.com/</a></td>
-            </tr>
-            <tr>
-                <td><a href="https://mail.google.com/mail/u/0/?ogbl#inbox" target="_blank">Gmail</a></td>
-                <td><a href="https://mail.google.com/mail/u/0/?ogbl#inbox" target="_blank">https://mail.google.com/mail/u/0/?ogbl#inbox</a></td>
-            </tr>
-            <tr>
-                <td><a href="https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0" target="_blank">Outlook</a></td>
-                <td><a href="https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0" target="_blank">https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0</a></td>
-            </tr>
-            <tr>
-                <td><a href="https://www.microsoft.com/v2/" target="_blank">Teams</a></td>
-                <td><a href="https://www.microsoft.com/v2/" target="_blank">https://teams.microsoft.com/v2/</a></td>
-            </tr>
-            <tr>
-                <td><a href="https://www.youtube.com/" target="_blank">YouTube</a></td>
-                <td><a href="https://www.youtube.com/" target="_blank">https://www.youtube.com/</a></td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- Buttons Section -->
+        <div class="row text-center">
+            <div class="col-md-4 mb-3">
+                <button class="btn dynamic-color w-100" data-hover="#f0f0f0">Google</button>
+            </div>
+            <div class="col-md-4 mb-3">
+                <button class="btn dynamic-color w-100" data-hover="#faf3e0">Gmail</button>
+            </div>
+            <div class="col-md-4 mb-3">
+                <button class="btn dynamic-color w-100" data-hover="#e1f5fe">Outlook</button>
+            </div>
+        </div>
+        <div class="row text-center">
+            <div class="col-md-6 mb-3">
+                <button class="btn dynamic-color w-100" data-hover="#e8f4ea">Teams</button>
+            </div>
+            <div class="col-md-6 mb-3">
+                <button class="btn dynamic-color w-100" data-hover="#dcd0c0">YouTube</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add hover functionality to buttons
+        document.querySelectorAll('.dynamic-color').forEach(button => {
+            const hoverColor = button.getAttribute('data-hover');
+            const originalColor = getComputedStyle(button).backgroundColor;
+
+            button.addEventListener('mouseover', () => {
+                button.style.backgroundColor = hoverColor;
+                button.style.color = '#000'; // Ensure text remains visible
+            });
+
+            button.addEventListener('mouseout', () => {
+                button.style.backgroundColor = originalColor;
+                button.style.color = '#fff'; // Revert text color
+            });
+        });
+    </script>
 </body>
 </html>
