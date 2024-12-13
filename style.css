@@ -1,72 +1,38 @@
-/* Universal reset to avoid any default browser margins and padding */
+/* Universal reset */
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* Ensure padding and border are included in element size */
+    box-sizing: border-box;
 }
 
-/* Ensure html and body take up the full height of the viewport */
-html, body {
-    height: 100%;
-    background-color: #faf3e0; /* Soft beige/cream background */
-    color: #333; /* Dark text for contrast */
+/* Body styling */
+body {
+    background-color: #faf3e0; /* Keep existing background */
     font-family: Arial, sans-serif;
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    color: #333;
 }
 
-/* Styling for the title of the website */
+/* Title styling */
 .site-title {
-    color: #007bff; /* Blue color for the title */
-    font-size: 2.5rem; /* Larger font size for prominence */
-    font-weight: bold; /* Bold for emphasis */
-    text-align: center; /* Center-align the title */
-    margin-top: 0; /* Remove any top margin to place it at the very top */
-    text-transform: uppercase; /* Capitalize all letters */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Optional subtle shadow */
-}
-
-/* Styling for the Common Links title */
-.table-title {
-    text-align: center;
-    font-size: 1.8rem;
-    margin: 20px 0;
-}
-
-/* Styling for the table */
-.link-table {
-    width: 80%;
-    margin: 0 auto;
-    border-collapse: collapse; /* Ensure borders collapse into a single line */
-    background-color: #ffffff; /* Set background color of the table */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for the table */
-}
-
-/* Styling for table headers */
-.link-table th {
-    background-color: #007bff; /* Blue background for the headers */
-    color: white; /* White text for the headers */
-    padding: 10px;
-    text-align: left;
-}
-
-/* Styling for table data */
-.link-table td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd; /* Light border at the bottom of each row */
-}
-
-/* Hover effect on table rows */
-.link-table tr:hover {
-    background-color: #f1f1f1; /* Light grey background when hovering over a row */
-}
-
-/* Styling for the links inside the table */
-.link-table a {
     color: #007bff;
-    text-decoration: none;
+    font-size: 3rem;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
-.link-table a:hover {
-    color: #0056b3;
-    text-decoration: underline; /* Underline the link on hover */
+/* Dynamic button styling */
+.btn.dynamic-color {
+    background-color: #007bff; /* Initial button color */
+    color: #fff;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+}
+
+.btn.dynamic-color:hover {
+    transform: scale(1.05); /* Slight scaling on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for hover effect */
 }
