@@ -1,73 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Kartik's Website</title>
-    <style>
-        h1 {
-            text-align: center;
-            border-style: solid;
-            border-width: thick;
-            border-color: #ffa500;
-        }
-
-        table,
-        th,
-        td {
-            padding: 6px;
-            border: 6px solid Blue;
-            border-collapse: collapse;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My LinkHub</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body style="background-color:Grey;">
-    <h1 style="color:#0000ff;">Kartik's Website</h1>
-	<h1 style='border:6px #ff0000 solid; font-size:15px; width:fit-content; width:-webkit-fit-content; width:-moz-fit-content; color:Black;'>Primary Links</h1>
+<body>
 
+    <!-- Title of the website -->
+    <h1 class="site-title">LinkHub</h1>
 
-    <table>
-        <tr>
-            <td>
-                <a href="http://192.168.0.100/login.html" target="_blank" style="color:Lime">AdguardHome</a>
-            </td>
-            <td>
-                <a href="https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox" target="_blank" style="color: Lime">Gmail</a>
-            </td>
-            <td>
-                <a href="https://outlook.live.com/owa/" target="_blank" style="color: Lime">Outlook</a>
-            </td>
-            <td>
-                <a href="https://github.com/login" target="_blank" style="color:Lime">Github</a>
-            </td>
-        </tr>
+    <!-- Table for Common Links -->
+    <h2 class="table-title">Common Links</h2>
+    <table class="link-table">
+        <thead>
+            <tr>
+                <th>Link Name</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="https://www.google.com/" target="_blank">Google</a></td>
+                <td><a href="https://www.google.com/" target="_blank">https://www.google.com/</a></td>
+            </tr>
+            <tr>
+                <td><a href="https://mail.google.com/mail/u/0/?ogbl#inbox" target="_blank">Gmail</a></td>
+                <td><a href="https://mail.google.com/mail/u/0/?ogbl#inbox" target="_blank">https://mail.google.com/mail/u/0/?ogbl#inbox</a></td>
+            </tr>
+            <tr>
+                <td><a href="https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0" target="_blank">Outlook</a></td>
+                <td><a href="https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0" target="_blank">https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0</a></td>
+            </tr>
+            <tr>
+                <td><a href="https://www.microsoft.com/v2/" target="_blank">Teams</a></td>
+                <td><a href="https://www.microsoft.com/v2/" target="_blank">https://teams.microsoft.com/v2/</a></td>
+            </tr>
+            <tr>
+                <td><a href="https://www.youtube.com/" target="_blank">YouTube</a></td>
+                <td><a href="https://www.youtube.com/" target="_blank">https://www.youtube.com/</a></td>
+            </tr>
+        </tbody>
     </table>
-    <table>
-        <tr>
-            <td>
-                <a href="https://chelmsford.ac.uk/our-college/remote-access.asp" target="_blank" style="color:Lime">Chelmsford-College</a>
-            </td>
-            <td>
-                <a href="https://portal.chelmsford.ac.uk/portal/index.html#Logon" target="_blank" style="color:Lime">Chelmsford-Portal</a>
-            </td>
-            <td>
-                <a href="https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=4765445b-32c6-49b0-83e6-1d93765276ca&redirect_uri=https%3A%2F%2Fwww.office.com%2Flandingv2&response_type=code%20id_token&scope=openid%20profile%20https%3A%2F%2Fwww.office.com%2Fv2%2FOfficeHome.All&response_mode=form_post&nonce=638303161438929305.M2M2NWY4NDgtOThiMy00MmM3LWIzYWQtZjcwZjkxMjVjYWUxOTNjNjAxNzQtMzA2NC00YjgwLWExOWMtNzRiNWM2YjhhNTJj&ui_locales=en-US&mkt=en-US&state=Tp2xQ-oKNhFOsJd4j2EFd6rgkz1nHOeDJRDAgwUFwRx3FUo-bVL08WAeNHwh-BPkCOezmAmiQURlqTN8ddPhu5auldCheFqRyB-owoKjViehAy13OLQ8It9SlLX-zKktBiQHlyHRUzCFmzaPwi8vUHIoiPwCJJxy16GntRW0ORfUJFQ-sj4ehhmwM_fcbqAV808I-g-Fq6irBIK-3THfbeS3zirVaAT3W70UPMtgMZ5UPLO5eg4mgOw8tWEDMEwUgqnLnE6I7p_U-z7f4iWMiA&x-client-SKU=ID_NET6_0&x-client-ver=6.30.1.0" target="_blank" style="color:Lime">Chelmsford-Office365</a>
-            </td>
-        </tr>
-    </table>
 
-    <p><strong>Local time:</strong> <span id="localTime"></span></p>
-
-    <script>
-        function updateLocalTime() {
-            const now = new Date();
-            const localTimeElement = document.getElementById('localTime');
-            localTimeElement.textContent = now.toLocaleString();
-        }
-
-        // Update the local time every second (1000 milliseconds)
-        setInterval(updateLocalTime, 1000);
-
-        // Initial update
-        updateLocalTime();
-    </script>
 </body>
 </html>
