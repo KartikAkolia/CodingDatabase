@@ -40,7 +40,7 @@
             document.getElementById('clock').innerText = now.toLocaleString('en-US', options);
         }
         setInterval(updateClock, 1000);
-        updateClock(); // Initial call
+        updateClock();
 
         // Button Data Array
         const buttons = [
@@ -59,12 +59,12 @@
             col.className = 'col-md-4 mb-3';
 
             const button = document.createElement('button');
-            button.className = 'btn dynamic-color w-auto'; // Dynamic width
+            button.className = 'btn dynamic-color w-auto';
             button.onclick = () => window.open(btn.link, '_blank');
 
             const textSpan = document.createElement('span');
             textSpan.innerText = btn.name;
-            textSpan.className = 'button-text-border'; // Custom border styling
+            textSpan.className = 'button-text-border';
 
             button.appendChild(textSpan);
             col.appendChild(button);
@@ -80,34 +80,22 @@
 
         // Dynamically Create Images
         const imageWrapper = document.getElementById('image-wrapper');
-
         images.forEach(image => {
             const container = document.createElement('div');
             const img = document.createElement('img');
             img.src = image.src;
-            img.style.objectFit = 'contain';
 
             if (image.isWallpaper) {
-                // Wallpaper Styling
-                container.style.position = 'fixed';
-                container.style.top = 0;
-                container.style.left = 0;
-                container.style.width = '100vw';
-                container.style.height = '100vh';
-                container.style.zIndex = -1;
-                img.style.objectFit = 'cover';
+                container.className = 'wallpaper';
             } else {
-                // Position regular images
                 container.style.position = 'absolute';
                 container.style[image.position.includes('bottom') ? 'bottom' : 'top'] = '1rem';
                 container.style[image.position.includes('right') ? 'right' : 'left'] = '1rem';
 
-                // Respect user-specified dimensions
                 if (image.width && image.height) {
                     container.style.width = image.width;
                     container.style.height = image.height;
                 } else {
-                    // Fallback to dynamic sizing
                     img.style.display = 'none';
                     img.onload = () => {
                         container.style.width = `${img.naturalWidth}px`;
@@ -120,6 +108,29 @@
             container.appendChild(img);
             imageWrapper.appendChild(container);
         });
+
+        // Responsive Styles Based on Screen Size
+        function updateResponsiveStyles() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scaleFactor = Math.min(screenWidth / 800, screenHeight / 600);
+
+            const title = document.querySelector('.site-title');
+            const buttons = document.querySelectorAll('.button-text-border');
+            const clock = document.getElementById('clock-container');
+
+            title.style.fontSize = `${2.5 * scaleFactor}rem`;
+            clock.style.fontSize = `${1.2 * scaleFactor}rem`;
+
+            buttons.forEach(button => {
+                button.style.padding = `${0.4 * scaleFactor}rem ${1.2 * scaleFactor}rem`;
+                button.style.fontSize = `${1.2 * scaleFactor}rem`;
+                button.style.borderWidth = `${1.5 * scaleFactor}px`;
+            });
+        }
+
+        window.addEventListener('load', updateResponsiveStyles);
+        window.addEventListener('resize', updateResponsiveStyles);
     </script>
 </body>
 </html>
