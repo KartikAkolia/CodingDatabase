@@ -10,50 +10,78 @@
 </head>
 <body>
 
-    <!-- Main Container -->
-    <div class="container py-5">
-        <!-- Title -->
-        <h1 class="site-title text-center mb-4">LinkHub</h1>
-
-        <!-- Buttons Section -->
-        <div class="row text-center">
-            <div class="col-md-4 mb-3">
-                <button class="btn dynamic-color w-100" data-hover="#f0f0f0" onclick="window.open('https://www.google.com/', '_blank')">Google</button>
-            </div>
-            <div class="col-md-4 mb-3">
-                <button class="btn dynamic-color w-100" data-hover="#faf3e0" onclick="window.open('https://mail.google.com/', '_blank')">Gmail</button>
-            </div>
-            <div class="col-md-4 mb-3">
-                <button class="btn dynamic-color w-100" data-hover="#e1f5fe" onclick="window.open('https://www.microsoft.com/en-us/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0', '_blank')">Outlook</button>
-            </div>
-        </div>
-        <div class="row text-center">
-            <div class="col-md-6 mb-3">
-                <button class="btn dynamic-color w-100" data-hover="#e8f4ea" onclick="window.open('https://teams.microsoft.com/v2/', '_blank')">Teams</button>
-            </div>
-            <div class="col-md-6 mb-3">
-                <button class="btn dynamic-color w-100" data-hover="#dcd0c0" onclick="window.open('https://www.youtube.com/', '_blank')">YouTube</button>
-            </div>
-        </div>
+    <!-- Clock Display -->
+    <div id="clock-container" class="text-end py-2 pe-3">
+        <span id="clock" class="text-muted"></span>
     </div>
 
-    <!-- Bootstrap JS Bundle -->
+    <!-- Main Content Container -->
+    <div class="container py-4">
+        <!-- Title -->
+        <h1 class="site-title text-center">LinkHub</h1>
+
+        <!-- Buttons Section -->
+        <div id="button-container" class="row text-center"></div>
+    </div>
+
+    <!-- Image Section 
+    <div id="image-container">
+        <img src="$PATH TO IMAGE" alt="" class="img-fluid rounded">
+    </div> -->
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Add hover functionality to buttons
-        document.querySelectorAll('.dynamic-color').forEach(button => {
-            const hoverColor = button.getAttribute('data-hover');
-            const originalColor = getComputedStyle(button).backgroundColor;
+        // Clock Functionality
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', 
+                hour: '2-digit', minute: '2-digit', second: '2-digit' 
+            };
+            document.getElementById('clock').innerText = now.toLocaleString('en-US', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
 
-            button.addEventListener('mouseover', () => {
-                button.style.backgroundColor = hoverColor;
-                button.style.color = '#000'; // Ensure text remains visible
-            });
+        // Button Data Array
+        const buttons = [
+            { name: 'Google', link: 'https://www.google.com/', hover: '#f0f0f0' },
+            { name: 'Gmail', link: 'https://mail.google.com/', hover: '#faf3e0' },
+            { name: 'Outlook', link: 'https://www.microsoft.com/en-us/microsoft-365/outlook/', hover: '#e1f5fe' },
+            { name: 'Teams', link: 'https://teams.microsoft.com/v2/', hover: '#e8f4ea' },
+            { name: 'YouTube', link: 'https://www.youtube.com/', hover: '#dcd0c0' },
+            { name: 'Knowled.gg', link: 'https://knowled.gg/enter/', hover: '#e1f5fe' }
+        ];
 
-            button.addEventListener('mouseout', () => {
-                button.style.backgroundColor = originalColor;
-                button.style.color = '#fff'; // Revert text color
-            });
+        // Dynamically Create Buttons
+        const buttonContainer = document.getElementById('button-container');
+        buttons.forEach(btn => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 mb-3';
+
+            const button = document.createElement('button');
+            button.className = 'btn dynamic-color w-100';
+            button.innerText = btn.name;
+            button.setAttribute('data-hover', btn.hover);
+            button.onclick = () => window.open(btn.link, '_blank');
+
+            col.appendChild(button);
+            buttonContainer.appendChild(col);
+        });
+
+        // Hover Effect Logic
+        document.addEventListener('mouseover', e => {
+            if (e.target.classList.contains('dynamic-color')) {
+                e.target.style.backgroundColor = e.target.getAttribute('data-hover');
+                e.target.style.color = '#000';
+            }
+        });
+        document.addEventListener('mouseout', e => {
+            if (e.target.classList.contains('dynamic-color')) {
+                e.target.style.backgroundColor = '';
+                e.target.style.color = '#fff';
+            }
         });
     </script>
 </body>
