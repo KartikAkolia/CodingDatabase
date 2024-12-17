@@ -10,6 +10,9 @@ body {
     background-color: #faf3e0;
     font-family: Arial, sans-serif;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* Clock Styling */
@@ -18,6 +21,7 @@ body {
     top: 0;
     right: 0;
     font-weight: bold;
+    font-size: 1.2rem;
 }
 
 /* Title Styling */
@@ -25,16 +29,45 @@ body {
     color: #007bff;
     font-weight: bold;
     text-transform: uppercase;
-    margin-bottom: 1rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 3rem;
 }
 
-/* Buttons Styling */
+/* Button Container Styling */
+#button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: auto;
+    width: 100%;
+}
+
+/* Grid Column Styling */
+#button-container > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1 1 calc(33.333% - 2rem); /* 3 columns on large screens */
+    max-width: calc(33.333% - 2rem);
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* Button Styling */
 .btn.dynamic-color {
     background-color: #007bff;
     color: #fff;
     border: none;
+    text-align: center;
+    padding: 0.6rem 1.2rem;
+    font-size: 1.2rem;
+    border-radius: 5px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
+    width: 100%;
+    max-width: 200px;
 }
 
 .btn.dynamic-color:hover {
@@ -46,6 +79,7 @@ body {
 .button-text-border {
     display: inline-block;
     border: 2px solid #fff;
+    padding: 0.4rem 0.8rem;
     border-radius: 5px;
     transition: border-color 0.3s ease;
 }
@@ -63,7 +97,7 @@ body {
 #image-wrapper img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: contain; /* Maintain image aspect ratio */
 }
 
 /* Wallpaper Styling */
@@ -73,6 +107,43 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    object-fit: cover;
-    z-index: -1;
+    object-fit: cover; /* Stretch to fill the screen */
+    z-index: -1; /* Send behind all other content */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    #button-container > div {
+        flex: 1 1 calc(50% - 2rem); /* 2 columns on tablets */
+        max-width: calc(50% - 2rem);
+    }
+
+    .btn.dynamic-color {
+        max-width: 180px;
+        font-size: 1.1rem;
+    }
+
+    .site-title {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    #button-container > div {
+        flex: 1 1 calc(100% - 2rem); /* Single column on smaller screens */
+        max-width: calc(100% - 2rem);
+    }
+
+    .btn.dynamic-color {
+        max-width: 160px;
+        font-size: 1rem;
+    }
+
+    .site-title {
+        font-size: 2rem;
+    }
+
+    #clock-container {
+        font-size: 1rem;
+    }
 }
