@@ -59,34 +59,23 @@
             col.className = 'col-md-4 mb-3';
 
             const button = document.createElement('button');
-            button.className = 'btn dynamic-color w-100';
-            button.innerText = btn.name;
-            button.setAttribute('data-hover', btn.hover);
+            button.className = 'btn dynamic-color w-auto'; // Dynamic width
             button.onclick = () => window.open(btn.link, '_blank');
 
+            const textSpan = document.createElement('span');
+            textSpan.innerText = btn.name;
+            textSpan.className = 'button-text-border'; // Custom border styling
+
+            button.appendChild(textSpan);
             col.appendChild(button);
             buttonContainer.appendChild(col);
         });
 
-        // Hover Effect Logic for Buttons
-        document.addEventListener('mouseover', e => {
-            if (e.target.classList.contains('dynamic-color')) {
-                e.target.style.backgroundColor = e.target.getAttribute('data-hover');
-                e.target.style.color = '#000';
-            }
-        });
-        document.addEventListener('mouseout', e => {
-            if (e.target.classList.contains('dynamic-color')) {
-                e.target.style.backgroundColor = '';
-                e.target.style.color = '#fff';
-            }
-        });
-
         // Image Data Array
         const images = [
-            { src: 'images/your-image.png', position: 'bottom-right', width: '200px', height: '200px' },
-            { src: 'images/your-second-image.png', position: 'center' }, // Dynamically sized
-            { src: 'images/wallpaper.png', isWallpaper: true } // Fullscreen wallpaper
+            { src: 'Robert.png', position: 'bottom-right', width: '200px', height: '200px' },
+            //{ src: 'images/your-second-image.png', position: 'center' }, // Dynamically sized
+            //{ src: 'images/wallpaper.png', isWallpaper: true } // Fullscreen wallpaper
         ];
 
         // Dynamically Create Images
@@ -108,16 +97,17 @@
                 container.style.zIndex = -1;
                 img.style.objectFit = 'cover';
             } else {
-                // Regular Images with Positioning
+                // Position regular images
                 container.style.position = 'absolute';
                 container.style[image.position.includes('bottom') ? 'bottom' : 'top'] = '1rem';
                 container.style[image.position.includes('right') ? 'right' : 'left'] = '1rem';
 
-                // User-Specified or Dynamic Dimensions
+                // Respect user-specified dimensions
                 if (image.width && image.height) {
                     container.style.width = image.width;
                     container.style.height = image.height;
                 } else {
+                    // Fallback to dynamic sizing
                     img.style.display = 'none';
                     img.onload = () => {
                         container.style.width = `${img.naturalWidth}px`;
