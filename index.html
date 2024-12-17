@@ -18,10 +18,12 @@
     <!-- Main Content Container -->
     <div class="container py-4">
         <!-- Title -->
-        <h1 class="site-title text-center">LinkHub</h1>
+        <h1 class="site-title">LinkHub</h1>
 
         <!-- Buttons Section -->
-        <div id="button-container" class="row text-center"></div>
+        <div id="button-container" class="row">
+            <!-- Buttons dynamically added via JavaScript -->
+        </div>
     </div>
 
     <!-- Dynamic Images Wrapper -->
@@ -44,29 +46,25 @@
 
         // Button Data Array
         const buttons = [
-            { name: 'Google', link: 'https://www.google.com/', hover: '#f0f0f0' },
-            { name: 'Gmail', link: 'https://mail.google.com/', hover: '#faf3e0' },
-            { name: 'Outlook', link: 'https://www.microsoft.com/en-us/microsoft-365/outlook/', hover: '#e1f5fe' },
-            { name: 'Teams', link: 'https://teams.microsoft.com/v2/', hover: '#e8f4ea' },
-            { name: 'YouTube', link: 'https://www.youtube.com/', hover: '#dcd0c0' },
-            { name: 'Knowled.gg', link: 'https://knowled.gg/enter/', hover: '#e1f5fe' }
+            { name: 'Google', link: 'https://www.google.com/' },
+            { name: 'Gmail', link: 'https://mail.google.com/' },
+            { name: 'Outlook', link: 'https://www.microsoft.com/en-us/microsoft-365/outlook/' },
+            { name: 'Teams', link: 'https://teams.microsoft.com/v2/' },
+            { name: 'YouTube', link: 'https://www.youtube.com/' },
+            { name: 'Knowled.gg', link: 'https://knowled.gg/enter/' }
         ];
 
         // Dynamically Create Buttons
         const buttonContainer = document.getElementById('button-container');
         buttons.forEach(btn => {
             const col = document.createElement('div');
-            col.className = 'col-md-4 mb-3';
+            col.className = 'col';
 
             const button = document.createElement('button');
-            button.className = 'btn dynamic-color w-auto';
+            button.className = 'btn dynamic-color';
             button.onclick = () => window.open(btn.link, '_blank');
+            button.innerHTML = `<span class="button-text-border">${btn.name}</span>`;
 
-            const textSpan = document.createElement('span');
-            textSpan.innerText = btn.name;
-            textSpan.className = 'button-text-border';
-
-            button.appendChild(textSpan);
             col.appendChild(button);
             buttonContainer.appendChild(col);
         });
@@ -74,8 +72,8 @@
         // Image Data Array
         const images = [
             { src: 'Robert.png', position: 'bottom-right', width: '200px', height: '200px' },
-            //{ src: 'images/your-second-image.png', position: 'center' }, // Dynamically sized
-            //{ src: 'images/wallpaper.png', isWallpaper: true } // Fullscreen wallpaper
+            { src: 'images/your-second-image.png', position: 'center' }, // Dynamically sized
+            { src: 'images/wallpaper.png', isWallpaper: true } // Fullscreen wallpaper
         ];
 
         // Dynamically Create Images
@@ -85,6 +83,7 @@
             const img = document.createElement('img');
             img.src = image.src;
 
+            // Handle Wallpaper Logic
             if (image.isWallpaper) {
                 container.className = 'wallpaper';
             } else {
@@ -92,15 +91,15 @@
                 container.style[image.position.includes('bottom') ? 'bottom' : 'top'] = '1rem';
                 container.style[image.position.includes('right') ? 'right' : 'left'] = '1rem';
 
+                // Prioritize user-defined dimensions
                 if (image.width && image.height) {
                     container.style.width = image.width;
                     container.style.height = image.height;
                 } else {
-                    img.style.display = 'none';
+                    // Fallback to natural image dimensions
                     img.onload = () => {
                         container.style.width = `${img.naturalWidth}px`;
                         container.style.height = `${img.naturalHeight}px`;
-                        img.style.display = 'block';
                     };
                 }
             }
@@ -108,29 +107,6 @@
             container.appendChild(img);
             imageWrapper.appendChild(container);
         });
-
-        // Responsive Styles Based on Screen Size
-        function updateResponsiveStyles() {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const scaleFactor = Math.min(screenWidth / 800, screenHeight / 600);
-
-            const title = document.querySelector('.site-title');
-            const buttons = document.querySelectorAll('.button-text-border');
-            const clock = document.getElementById('clock-container');
-
-            title.style.fontSize = `${2.5 * scaleFactor}rem`;
-            clock.style.fontSize = `${1.2 * scaleFactor}rem`;
-
-            buttons.forEach(button => {
-                button.style.padding = `${0.4 * scaleFactor}rem ${1.2 * scaleFactor}rem`;
-                button.style.fontSize = `${1.2 * scaleFactor}rem`;
-                button.style.borderWidth = `${1.5 * scaleFactor}px`;
-            });
-        }
-
-        window.addEventListener('load', updateResponsiveStyles);
-        window.addEventListener('resize', updateResponsiveStyles);
     </script>
 </body>
 </html>
