@@ -30,14 +30,14 @@ body {
     margin-bottom: 0;
 }
 
-/* Dynamic Buttons */
+/* Buttons Styling */
 .btn.dynamic-color {
     background-color: #007bff;
     color: #fff;
-    border-radius: 8px;
-    padding: 1rem;
+    border: none;
     font-size: 1.2rem;
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
 }
 
 .btn.dynamic-color:hover {
@@ -45,9 +45,22 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* General Image Styling */
+/* Button Border around Text */
+.button-text-border {
+    display: inline-block;
+    padding: 0 calc(1vw + 5px);
+    border: 2px solid #fff;
+    border-radius: 5px;
+    transition: border-color 0.3s ease, padding 0.3s ease;
+}
+
+.btn.dynamic-color:hover .button-text-border {
+    border-color: #000;
+}
+
+/* Dynamic Image Styles */
 #image-wrapper div {
-    z-index: 1; /* Regular images above wallpaper */
+    z-index: 1; /* Ensure images render above wallpapers */
 }
 
 #image-wrapper img {
