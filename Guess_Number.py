@@ -1,31 +1,42 @@
-class GuessNumber:
+import random
+
+class GuessNumberGame:
     def __init__(self):
-        pass
+        self.max_attempts = 5
+        self.lower_bound = 10
+        self.upper_bound = 20
+        self.target_number = random.randint(self.lower_bound, self.upper_bound)
 
-    import random
+    def play(self):
+        print("\nWelcome to the Number Guessing Game!")
+        print(f"Try to guess the lucky number between {self.lower_bound} and {self.upper_bound}.")
+        print(f"You have {self.max_attempts} attempts. Good luck!\n")
 
-    def x(self):
-        ctr = 0
-        while ctr <= 5:
-            i = int(input("Enter A Number"))
-            if i < 0:
-                print("Positive Numbers Only")
-                continue
-            j = self.random.randint(10, 20)
-            diff = j - i
-            if diff < 0 or diff > 0:
-                print("Entered number close to lucky one \n Please try again...")
-                print("The random generated is " + str(j))
-                ctr = ctr + 1
-            if diff == 0:
-                print("Well Done You have guessed the number right")
-                print("The random generated is " + str(j))
-                break
-            if ctr == 6:
-                print("You couldn't guess the number \n Good Luck Next Time ")
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                guess = int(input(f"Attempt {attempt}/{self.max_attempts} - Enter your guess: "))
+                
+                if guess < 0:
+                    print("Only positive numbers allowed! Try again.")
+                    continue
+                if guess < self.lower_bound or guess > self.upper_bound:
+                    print(f"Please enter a number between {self.lower_bound} and {self.upper_bound}.")
+                    continue
+                
+                if guess == self.target_number:
+                    print("\n🎉 Congratulations! You've guessed the right number!")
+                    break
+                else:
+                    print("❌ Oops! That's not the correct number.")
+                    hint = "higher" if guess < self.target_number else "lower"
+                    print(f"Hint: Try a {hint} number.")
+            except ValueError:
+                print("Invalid input! Please enter a valid number.")
+        else:
+            print(f"\n😔 You've used all attempts! The lucky number was {self.target_number}.")
+        
+        print("\nThanks for playing! See you next time.")
 
-        print("END")
-
-
-n = GuessNumber()
-n.x()
+if __name__ == "__main__":
+    game = GuessNumberGame()
+    game.play()
