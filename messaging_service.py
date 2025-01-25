@@ -11,7 +11,7 @@ def check_process():
     mydb = mysql.connector.connect(
         host="192.168.0.102",
         user="kartik",
-        password="Kartik84@",
+        password="",
         database="KARTIK",
         port=3306
     )
