@@ -9,9 +9,11 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Header with Clock -->
-  <header class="d-flex justify-content-end py-2 pe-3">
-    <span id="clock" class="text-muted"></span>
+  <!-- Header with Control Panel (Clock & BG Color Picker) -->
+  <header id="control-panel" class="d-flex justify-content-end align-items-center py-2 pe-3">
+    <span id="clock" class="text-muted me-3"></span>
+    <label for="bgColorPicker" id="bgColorLabel" class="me-2">BG Color:</label>
+    <input type="color" id="bgColorPicker" value="#faf3e0" />
   </header>
   
   <!-- Main Content -->
@@ -44,6 +46,14 @@
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // -----------------------------
+    // Background Color Picker Functionality
+    // -----------------------------
+    document.getElementById('bgColorPicker').addEventListener('input', function(e) {
+      // Update the CSS variable for background color dynamically
+      document.documentElement.style.setProperty('--bg-color', e.target.value);
+    });
     
     // -----------------------------
     // Button Data Array & Creation
@@ -76,11 +86,11 @@
     // -----------------------------
     const images = [
       {
-        src: 'Test.png',
+        src: 'download.jpg',
         position: 'bottom-right',
-        width: '200px',
-        height: '200px',
-        alt: 'Robert Image'
+        width: '400px',
+        height: '400px',
+        alt: 'Wallpaper'
       }
     ];
 
@@ -91,7 +101,7 @@
       img.src = image.src;
       img.alt = image.alt || '';
 
-      // Wallpaper image fills the screen (assuming styles are defined in style.css)
+      // If the image is marked as wallpaper, the wallpaper class will handle full-screen styling
       if (image.isWallpaper) {
         container.className = 'wallpaper';
       } else {
@@ -109,7 +119,7 @@
           container.style[horizontal] = '1rem';
         }
 
-        // Set dimensions if provided, otherwise adjust after the image loads
+        // Set dimensions if provided, or adjust based on image natural size after loading
         if (image.width && image.height) {
           container.style.width = image.width;
           container.style.height = image.height;
