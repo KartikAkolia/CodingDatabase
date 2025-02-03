@@ -9,20 +9,24 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Header: Clock Display -->
+  <!-- Header with Control Panel -->
   <header>
-    <div id="clock-container" class="text-end py-2 pe-3">
-      <span id="clock" class="text-muted"></span>
+    <div id="control-panel">
+      <!-- Clock Display -->
+      <span id="clock"></span>
+      <!-- Background Color Picker -->
+      <label for="bgColorPicker" id="bgColorLabel">BG Color:</label>
+      <input type="color" id="bgColorPicker" value="#faf3e0" />
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="container py-4">
+  <!-- Main Content Container -->
+  <div class="container py-4">
     <!-- Site Title -->
-    <h1 class="site-title text-center">LinkHub</h1>
+    <h1 class="site-title">LinkHub</h1>
 
     <!-- Buttons Section -->
-    <section id="button-container" class="row">
+    <div id="button-container" class="row">
       <div class="col">
         <a href="https://www.google.com/" target="_blank" class="btn dynamic-color">
           <span class="button-text-border">Google</span>
@@ -53,14 +57,15 @@
           <span class="button-text-border">Knowled.gg</span>
         </a>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
   <!-- Optional: Dynamic Images Wrapper -->
   <div id="image-wrapper"></div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom JavaScript -->
   <script>
     // ---------------------------
     // Clock Functionality
@@ -68,8 +73,13 @@
     function updateClock() {
       const now = new Date();
       const options = {
-        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       };
       document.getElementById('clock').innerText = now.toLocaleString('en-US', options);
     }
@@ -77,138 +87,12 @@
     setInterval(updateClock, 1000);
 
     // ---------------------------
-    // Dynamic Images (Optional)
+    // Background Color Picker Functionality
     // ---------------------------
-    // Uncomment and update the array below with your image objects as needed.
-    const images = [
-      // Example:
-      // { src: 'images/your-first-image.png', position: 'bottom-right', width: '200px', height: '200px', alt: 'Description of first image' },
-      // { src: 'images/your-second-image.png', position: 'center', alt: 'Description of second image' },
-      // { src: 'images/wallpaper.png', isWallpaper: true, alt: 'Wallpaper background' }
-    ];
-
-    const imageWrapper = document.getElementById('image-wrapper');
-    images.forEach(image => {
-      const container = document.createElement('div');
-      const img = document.createElement('img');
-      img.src = image.src;
-      // Provide descriptive alt text for accessibility
-      img.alt = image.alt || '';
-
-      if (image.isWallpaper) {
-        container.className = 'wallpaper';
-      } else {
-        container.style.position = 'absolute';
-        // Set position based on provided value. Supports 'bottom-right', 'center', etc.
-        if (image.position) {
-          if (image.position.includes('bottom')) {
-            container.style.bottom = '1rem';
-          } else if (image.position === 'center') {
-            container.style.top = '50%';
-            container.style.left = '50%';
-            container.style.transform = 'translate(-50%, -50%)';
-          } else {
-            container.style.top = '1rem';
-          }
-          if (image.position.includes('right')) {
-            container.style.right = '1rem';
-          } else if (image.position.includes('left')) {
-            container.style.left = '1rem';
-          }
-        }
-
-        // Apply dimensions if provided; otherwise, use natural image size after loading.
-        if (image.width && image.height) {
-          container.style.width = image.width;
-          container.style.height = image.height;
-        } else {
-          img.onload = () => {
-            container.style.width = img.naturalWidth + 'px';
-            container.style.height = img.naturalHeight + 'px';
-          };
-        }
-      }
-      container.appendChild(img);
-      imageWrapper.appendChild(container);
+    document.getElementById('bgColorPicker').addEventListener('input', function(e) {
+      // Update the CSS variable for background color dynamically
+      document.documentElement.style.setProperty('--bg-color', e.target.value);
     });
   </script>
 </body>
 </html>
-
-<!-- 
-===============================
- Documentation: Buttons & Tables in LinkHub
-===============================
-
-Button Examples:
-----------------
-
-Beginner Version:
------------------
-This example demonstrates how to create a simple, responsive button linking to Google.
-
-1. **Container Setup:**  
-   - `<div id="button-container" class="row">`  
-     Creates a responsive container using Bootstrap's grid system to arrange its children in a row.
-
-2. **Column Layout:**  
-   - `<div class="col">`  
-     Defines a responsive column inside the row, ensuring proper spacing and alignment.
-
-3. **Button Element:**  
-   - `<a href="https://www.google.com/" target="_blank" class="btn dynamic-color">`  
-     - **`href`**: Specifies the URL to navigate to (Google).  
-     - **`target="_blank"`**: Opens the link in a new browser tab.  
-     - **`class="btn dynamic-color"`**: Applies Bootstrap’s button styling along with custom styles (e.g., colors, hover effects).
-
-4. **Button Text Styling:**  
-   - `<span class="button-text-border">Google</span>`  
-     Wraps the button text with an additional border style to make it stand out visually.
-
-Advanced Version:
------------------
-This version builds upon the beginner example with an emphasis on layout properties and enhanced styling.
-
-1. **Responsive Container:**  
-   - `<div id="button-container" class="row">`  
-     Serves as the parent container for buttons, utilizing Bootstrap’s grid layout.
-
-2. **Individual Columns:**  
-   - `<div class="col">`  
-     Each column houses a button, ensuring consistent spacing and alignment across different screen sizes.
-
-3. **Clickable Button Link:**  
-   - `<a href="https://www.google.com/" target="_blank" class="btn dynamic-color">`  
-     - **`href`**: Directs users to Google.  
-     - **`target="_blank"`**: Ensures the link opens in a new tab.  
-     - **Classes**: Combines Bootstrap's standard button styling with custom classes for unique visual effects.
-
-4. **Enhanced Text Styling:**  
-   - `<span class="button-text-border">Google</span>`  
-     Provides the button’s label with a decorative border, highlighting the text for improved visual appeal.
-
-Table Example:
---------------
-This example is inspired by W3Schools' approach (https://www.w3schools.com/html/html_tables.asp) for displaying tabular data, such as a list of companies with contact names and countries.
-
-1. **Table Structure:**  
-   - `<table>`  
-     Defines the overall table container.
-
-2. **Row Definition:**  
-   - `<tr>`  
-     Represents each row within the table.
-
-3. **Headers Setup:**  
-   - `<th>`  
-     The first row typically uses `<th>` elements to define headers (e.g., "Company", "Contact", "Country").
-
-4. **Data Cells:**  
-   - `<td>`  
-     Subsequent rows use `<td>` elements to display the actual data, with each cell corresponding to a specific detail (company name, contact person, and country).
-
-5. **Data Organization:**  
-   - Each `<tr>` (row) represents a unique company entry, ensuring that the table is organized and easy to read.
-
-This documentation outlines how to combine HTML, Bootstrap, and custom CSS to create responsive buttons and well-structured tables, providing both simple and advanced implementations for clarity and maintainability.
--->
