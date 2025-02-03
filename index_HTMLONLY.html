@@ -87,11 +87,20 @@
     setInterval(updateClock, 1000);
 
     // ---------------------------
-    // Background Color Picker Functionality
+    // Background Color Picker Functionality with Persistence
     // ---------------------------
+    // Check for a saved background color in localStorage and apply it
+    const savedBgColor = localStorage.getItem('bgColor');
+    if (savedBgColor) {
+      document.documentElement.style.setProperty('--bg-color', savedBgColor);
+      document.getElementById('bgColorPicker').value = savedBgColor;
+    }
+    
+    // Listen for changes on the background color picker, update the CSS variable, and save the value
     document.getElementById('bgColorPicker').addEventListener('input', function(e) {
-      // Update the CSS variable for background color dynamically
-      document.documentElement.style.setProperty('--bg-color', e.target.value);
+      const newColor = e.target.value;
+      document.documentElement.style.setProperty('--bg-color', newColor);
+      localStorage.setItem('bgColor', newColor);
     });
   </script>
 </body>
