@@ -48,11 +48,20 @@
     updateClock();
 
     // -----------------------------
-    // Background Color Picker Functionality
+    // Background Color Persistence
     // -----------------------------
+    // Check for a saved background color in localStorage and apply it
+    const savedBgColor = localStorage.getItem('bgColor');
+    if (savedBgColor) {
+      document.documentElement.style.setProperty('--bg-color', savedBgColor);
+      document.getElementById('bgColorPicker').value = savedBgColor;
+    }
+    
+    // Listen for changes on the background color picker and update the CSS variable + localStorage
     document.getElementById('bgColorPicker').addEventListener('input', function(e) {
-      // Update the CSS variable for background color dynamically
-      document.documentElement.style.setProperty('--bg-color', e.target.value);
+      const newColor = e.target.value;
+      document.documentElement.style.setProperty('--bg-color', newColor);
+      localStorage.setItem('bgColor', newColor);
     });
     
     // -----------------------------
@@ -101,7 +110,7 @@
       img.src = image.src;
       img.alt = image.alt || '';
 
-      // If the image is marked as wallpaper, the wallpaper class will handle full-screen styling
+      // Check if the image is marked as wallpaper (full screen)
       if (image.isWallpaper) {
         container.className = 'wallpaper';
       } else {
