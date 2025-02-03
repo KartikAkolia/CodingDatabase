@@ -6,10 +6,10 @@
 ==============================================*/
 :root {
   --primary-color: #007bff;      /* Main blue */
-  --accent-color:  #0056b3;      /* Darker blue for hover effects */
-  --bg-color:      #faf3e0;      /* Light, warm background */
-  --text-color:    #333333;     /* Dark gray for text */
-  --border-color:  #ffffff;      /* White for borders */
+  --accent-color:  #0056b3;       /* Darker blue for hover effects */
+  --bg-color:      #faf3e0;       /* Default background (warm off-white) */
+  --text-color:    #333333;      /* Dark gray for text */
+  --border-color:  #ffffff;       /* White for borders */
   --font-family:   'Poppins', sans-serif;
   --transition:    0.3s ease;
   --border-radius: 8px;
@@ -38,12 +38,40 @@ body {
 }
 
 /*==============================================
-=               Clock Styling                  =
+=          Control Panel Styling               =
 ==============================================*/
-#clock-container {
+/* This container holds the clock and the background color picker */
+#control-panel {
   position: absolute;
   top: 0.5rem;
   right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+#control-panel label {
+  cursor: pointer;
+  margin-right: 0.2rem;
+}
+
+#control-panel input[type="color"] {
+  border: none;
+  background: transparent;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+/*==============================================
+=               Clock Styling                  =
+==============================================*/
+/* (The clock is now part of the control panel) */
+#clock {
   font-weight: 600;
   font-size: 1rem;
   color: var(--text-color);
@@ -184,7 +212,7 @@ body {
   .site-title {
     font-size: 2rem;
   }
-  #clock-container {
+  #clock {
     font-size: 0.9rem;
   }
 }
