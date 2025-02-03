@@ -20,12 +20,12 @@
     </div>
   </header>
 
-  <!-- Main Content Container 
+  <!-- Main Content Container
   <div class="container py-4">
-    <!-- Site Title 
+    <!-- Site Title
     <h1 class="site-title">LinkHub</h1>
 
-    <!-- Buttons Section 
+    <!-- Buttons Section
     <div id="button-container" class="row">
       <div class="col">
         <a href="https://www.google.com/" target="_blank" class="btn dynamic-color">
@@ -59,13 +59,14 @@
       </div>
     </div>
   </div>
--->
+  -->
 
   <!-- Optional: Dynamic Images Wrapper -->
   <div id="image-wrapper"></div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
   <!-- Custom JavaScript -->
   <script>
     // ---------------------------
@@ -102,6 +103,60 @@
       const newColor = e.target.value;
       document.documentElement.style.setProperty('--bg-color', newColor);
       localStorage.setItem('bgColor', newColor);
+    });
+
+    // ---------------------------
+    // Dynamic Images Functionality
+    // ---------------------------
+    const images = [
+      {
+        src: 'download.jpg',
+        position: 'bottom-right',
+        width: '400px',
+        height: '400px',
+        alt: 'Wallpaper'
+      }
+      // Add more image objects here as needed
+    ];
+
+    const imageWrapper = document.getElementById('image-wrapper');
+    images.forEach(image => {
+      const container = document.createElement('div');
+      const img = document.createElement('img');
+      img.src = image.src;
+      img.alt = image.alt || '';
+
+      // If the image is marked as a wallpaper (full screen), use the wallpaper class
+      if (image.isWallpaper) {
+        container.className = 'wallpaper';
+      } else {
+        container.style.position = 'absolute';
+        
+        // Handle image positioning: supports 'center' or a format like 'bottom-right'
+        if (image.position === 'center') {
+          container.style.top = '50%';
+          container.style.left = '50%';
+          container.style.transform = 'translate(-50%, -50%)';
+        } else {
+          const [vertical, horizontal] = image.position.split('-');
+          container.style[vertical] = '1rem';
+          container.style[horizontal] = '1rem';
+        }
+
+        // Set dimensions if provided; otherwise, adjust based on the image's natural size after loading
+        if (image.width && image.height) {
+          container.style.width = image.width;
+          container.style.height = image.height;
+        } else {
+          img.onload = () => {
+            container.style.width = img.naturalWidth + 'px';
+            container.style.height = img.naturalHeight + 'px';
+          };
+        }
+      }
+      
+      container.appendChild(img);
+      imageWrapper.appendChild(container);
     });
   </script>
 </body>
