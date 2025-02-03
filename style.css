@@ -1,149 +1,183 @@
-/* General Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/*==============================================
+=            CSS Custom Properties             =
+==============================================*/
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #fff;
+  --bg-color: #faf3e0;
+  --text-color: #333;
+  --hover-scale: 1.05;
+  --transition-speed: 0.3s;
 }
 
-/* Body Styling */
+/*==============================================
+=               Global Reset                   =
+==============================================*/
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/*==============================================
+=               Body Styling                   =
+==============================================*/
 body {
-    background-color: #faf3e0;
-    font-family: Arial, sans-serif;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  background-color: var(--bg-color);
+  font-family: Arial, sans-serif;
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-/* Clock Styling */
+/*==============================================
+=              Clock Styling                   =
+==============================================*/
 #clock-container {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-weight: bold;
-    font-size: 1.2rem;
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-weight: bold;
+  font-size: 1.2rem;
 }
 
-/* Title Styling */
+/*==============================================
+=              Title Styling                   =
+==============================================*/
 .site-title {
-    color: #007bff;
-    font-weight: bold;
-    text-transform: uppercase;
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 3rem;
+  color: var(--primary-color);
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 3rem;
 }
 
-/* Button Container Styling */
+/*==============================================
+=           Button Container Styling           =
+==============================================*/
 #button-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin: auto;
-    width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: auto;
+  width: 100%;
 }
 
-/* Grid Column Styling */
+/* Grid Column Styling for Buttons */
 #button-container > div {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex: 1 1 calc(33.333% - 2rem); /* 3 columns on large screens */
-    max-width: calc(33.333% - 2rem);
-    padding: 10px;
-    box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1 1 calc(33.333% - 2rem); /* 3 columns on large screens */
+  max-width: calc(33.333% - 2rem);
+  padding: 10px;
 }
 
-/* Button Styling */
+/*==============================================
+=             Button Styling                   =
+==============================================*/
 .btn.dynamic-color {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    text-align: center;
-    padding: 0.6rem 1.2rem;
-    font-size: 1.2rem;
-    border-radius: 5px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    width: 100%;
-    max-width: 200px;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  text-align: center;
+  padding: 0.6rem 1.2rem;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  transition: transform var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+  width: 100%;
+  max-width: 200px;
 }
 
 .btn.dynamic-color:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(var(--hover-scale));
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Button Border around Text */
+/* Button Text Border */
 .button-text-border {
-    display: inline-block;
-    border: 2px solid #fff;
-    padding: 0.4rem 0.8rem;
-    border-radius: 5px;
-    transition: border-color 0.3s ease;
+  display: inline-block;
+  border: 2px solid var(--secondary-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  transition: border-color var(--transition-speed) ease;
 }
 
 .btn.dynamic-color:hover .button-text-border {
-    border-color: #000;
+  border-color: #000;
 }
 
-/* Dynamic Image Styling */
+/*==============================================
+=            Dynamic Image Styling             =
+==============================================*/
 #image-wrapper div {
-    position: absolute;
-    z-index: 1;
+  position: absolute;
+  z-index: 1;
 }
 
 #image-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Maintain image aspect ratio */
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Maintain image aspect ratio */
 }
 
 /* Wallpaper Styling */
 .wallpaper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover; /* Stretch to fill the screen */
-    z-index: -1; /* Send behind all other content */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; /* Send behind all other content */
 }
 
-/* Responsive Adjustments */
+.wallpaper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Fill the screen */
+}
+
+/*==============================================
+=             Responsive Adjustments           =
+==============================================*/
 @media (max-width: 1024px) {
-    #button-container > div {
-        flex: 1 1 calc(50% - 2rem); /* 2 columns on tablets */
-        max-width: calc(50% - 2rem);
-    }
+  #button-container > div {
+    flex: 1 1 calc(50% - 2rem); /* 2 columns on tablets */
+    max-width: calc(50% - 2rem);
+  }
 
-    .btn.dynamic-color {
-        max-width: 180px;
-        font-size: 1.1rem;
-    }
+  .btn.dynamic-color {
+    max-width: 180px;
+    font-size: 1.1rem;
+  }
 
-    .site-title {
-        font-size: 2.5rem;
-    }
+  .site-title {
+    font-size: 2.5rem;
+  }
 }
 
 @media (max-width: 768px) {
-    #button-container > div {
-        flex: 1 1 calc(100% - 2rem); /* Single column on smaller screens */
-        max-width: calc(100% - 2rem);
-    }
+  #button-container > div {
+    flex: 1 1 calc(100% - 2rem); /* Single column on smaller screens */
+    max-width: calc(100% - 2rem);
+  }
 
-    .btn.dynamic-color {
-        max-width: 160px;
-        font-size: 1rem;
-    }
+  .btn.dynamic-color {
+    max-width: 160px;
+    font-size: 1rem;
+  }
 
-    .site-title {
-        font-size: 2rem;
-    }
+  .site-title {
+    font-size: 2rem;
+  }
 
-    #clock-container {
-        font-size: 1rem;
-    }
+  #clock-container {
+    font-size: 1rem;
+  }
 }
