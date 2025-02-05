@@ -6,143 +6,347 @@
   <title>My LinkHub</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- External Stylesheet -->
   <link rel="stylesheet" href="style.css" />
+  <!--
+    IMPORTANT:
+    - This HTML uses semantic tags and Bootstrap classes to help organize the code.
+    - If you modify any IDs or classes, ensure that your CSS and JS references are updated accordingly.
+  -->
 </head>
 <body>
-  <!-- Header with Control Panel (Clock & BG Color Picker) -->
-  <header id="control-panel" class="d-flex justify-content-end align-items-center py-2 pe-3">
-    <span id="clock" class="text-muted me-3"></span>
-    <label for="bgColorPicker" id="bgColorLabel" class="me-2">BG Color:</label>
-    <input type="color" id="bgColorPicker" value="#faf3e0" />
+  <!-- HEADER: Top Navbar -->
+  <header>
+    <nav class="navbar">
+      <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Hamburger Menu Toggle (Top Left) -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#settingsMenu" 
+          aria-controls="settingsMenu" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Clock & Dark Mode Toggle (Top Right) -->
+        <div class="d-flex flex-column align-items-end">
+          <span id="clock" class="navbar-text"></span>
+          <div class="d-flex align-items-center">
+            <label for="darkModeToggle" class="me-1 mb-0">Dark Mode</label>
+            <input class="form-check-input" type="checkbox" id="darkModeToggle">
+          </div>
+        </div>
+      </div>
+    </nav>
   </header>
-  
-  <!-- Main Content -->
+
+  <!-- ASIDE: Settings Menu Overlay (Hamburger Menu Content) -->
+  <aside id="settingsMenu" class="collapse">
+    <!-- Close Button -->
+    <div class="d-flex justify-content-end mb-3">
+      <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#settingsMenu" aria-label="Close"></button>
+    </div>
+    <section class="settings-container">
+      <!-- Background Color Picker -->
+      <div>
+        <label for="bgColorPicker" class="me-1">BG Color:</label>
+        <input type="color" id="bgColorPicker" value="#faf3e0">
+      </div>
+      <!-- Background Image Upload -->
+      <div>
+        <label for="bgImageUpload" class="me-1">BG Image:</label>
+        <input type="file" id="bgImageUpload" accept="image/*">
+      </div>
+      <!-- Clear BG Image Button -->
+      <div>
+        <button id="clearBgImage" class="btn btn-sm btn-outline-secondary">Clear BG Image</button>
+      </div>
+      <!-- Toggle Customizable Links Form -->
+      <div>
+        <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#linkFormSection" 
+          aria-expanded="false" aria-controls="linkFormSection">
+          Toggle Customize Links
+        </button>
+      </div>
+    </section>
+  </aside>
+
+  <!-- MAIN CONTENT -->
   <main class="container py-4">
-    <h1 class="site-title text-center">LinkHub</h1>
+    <!-- Site Title -->
+    <section>
+      <h1 class="site-title text-center">LinkHub</h1>
+    </section>
+    
+    <!-- Customizable Links Form -->
+    <section id="linkFormSection" class="collapse mb-4">
+      <h2 class="h5">Customize Links</h2>
+      <form id="linkForm" class="row g-2 align-items-end">
+        <div class="col-sm-4">
+          <label for="linkName" class="form-label">Link Name</label>
+          <input type="text" id="linkName" class="form-control" placeholder="Enter link name" required>
+        </div>
+        <div class="col-sm-6">
+          <label for="linkURL" class="form-label">URL</label>
+          <input type="url" id="linkURL" class="form-control" placeholder="Enter URL" required>
+        </div>
+        <div class="col-sm-2">
+          <button type="submit" class="btn btn-primary">Add Link</button>
+        </div>
+      </form>
+    </section>
     
     <!-- Buttons Section -->
     <section id="button-container" class="row g-3 justify-content-center">
-      <!-- Buttons will be dynamically added via JavaScript -->
+      <!-- Dynamically added link buttons will appear here -->
     </section>
   </main>
 
-  <!-- Dynamic Images Wrapper -->
-  <div id="image-wrapper"></div>
+  <!-- DYNAMIC IMAGES WRAPPER -->
+  <section id="image-wrapper"></section>
   
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   
+  <!-- Consolidated JavaScript -->
   <script>
-    // -----------------------------
-    // Clock Functionality
-    // -----------------------------
-    function updateClock() {
-      const now = new Date();
-      const options = {
-        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-      };
-      document.getElementById('clock').innerText = now.toLocaleString('en-US', options);
+    "use strict";
+    
+    /******************************************************************
+     * CONFIGURATION & WARNING:
+     * - Do not modify the configuration below unless you understand
+     *   its impact on the entire codebase.
+     * - Changes to defaultButtons, navbarHeight, or element IDs 
+     *   may break functionality if not updated consistently.
+     ******************************************************************/
+    const config = {
+      navbarHeight: 56, // Adjust if your navbar height changes
+      defaultButtons: [
+        { name: 'Google', link: 'https://www.google.com/' },
+        { name: 'Gmail', link: 'https://mail.google.com/' },
+        { name: 'Outlook', link: 'https://www.microsoft.com/en-us/microsoft-365/outlook/' },
+        { name: 'Teams', link: 'https://teams.microsoft.com/v2/' },
+        { name: 'YouTube', link: 'https://www.youtube.com/' },
+        { name: 'Knowled.gg', link: 'https://knowled.gg/enter/' }
+      ]
+    };
+
+    /******************************************************************
+     * VERSION CHECK (MANUAL):
+     * Update the currentVersion value with every significant change.
+     ******************************************************************/
+    const currentVersion = "1.0.0";
+    const savedVersion = localStorage.getItem("version");
+    if (savedVersion !== currentVersion) {
+      alert("Warning: Code version updated to " + currentVersion + ". Please review changes to ensure nothing breaks.");
+      localStorage.setItem("version", currentVersion);
     }
-    setInterval(updateClock, 1000);
-    updateClock();
 
-    // -----------------------------
-    // Background Color Persistence
-    // -----------------------------
-    // Check for a saved background color in localStorage and apply it
-    const savedBgColor = localStorage.getItem('bgColor');
-    if (savedBgColor) {
-      document.documentElement.style.setProperty('--bg-color', savedBgColor);
-      document.getElementById('bgColorPicker').value = savedBgColor;
+    /******************************************************************
+     * INITIALIZATION FUNCTION
+     * Call each module's initializer to set up functionality.
+     ******************************************************************/
+    function init() {
+      initClock();
+      initBackgroundHandlers();
+      initDarkMode();
+      initCustomLinks();
+      initDynamicImages();
     }
     
-    // Listen for changes on the background color picker and update the CSS variable + localStorage
-    document.getElementById('bgColorPicker').addEventListener('input', function(e) {
-      const newColor = e.target.value;
-      document.documentElement.style.setProperty('--bg-color', newColor);
-      localStorage.setItem('bgColor', newColor);
-    });
-    
-    // -----------------------------
-    // Button Data Array & Creation
-    // -----------------------------
-    const buttons = [
-      { name: 'Google', link: 'https://www.google.com/' },
-      { name: 'Gmail', link: 'https://mail.google.com/' },
-      { name: 'Outlook', link: 'https://www.microsoft.com/en-us/microsoft-365/outlook/' },
-      { name: 'Teams', link: 'https://teams.microsoft.com/v2/' },
-      { name: 'YouTube', link: 'https://www.youtube.com/' },
-      { name: 'Knowled.gg', link: 'https://knowled.gg/enter/' }
-    ];
-
-    const buttonContainer = document.getElementById('button-container');
-    buttons.forEach(btn => {
-      const col = document.createElement('div');
-      col.className = 'col-auto';
-
-      const button = document.createElement('button');
-      button.className = 'btn dynamic-color';
-      button.addEventListener('click', () => window.open(btn.link, '_blank'));
-      button.innerHTML = `<span class="button-text-border">${btn.name}</span>`;
-
-      col.appendChild(button);
-      buttonContainer.appendChild(col);
-    });
-    
-    // -----------------------------
-    // Image Data Array & Creation
-    // -----------------------------
-    const images = [
-      {
-        src: 'download.jpg',
-        position: 'bottom-right',
-        width: '400px',
-        height: '400px',
-        alt: 'Wallpaper'
+    /******************************************************************
+     * MODULE: Clock
+     ******************************************************************/
+    function initClock() {
+      function updateClock() {
+        const now = new Date();
+        const options = {
+          weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        };
+        document.getElementById('clock').innerText = now.toLocaleString('en-US', options);
       }
-    ];
-
-    const imageWrapper = document.getElementById('image-wrapper');
-    images.forEach(image => {
-      const container = document.createElement('div');
-      const img = document.createElement('img');
-      img.src = image.src;
-      img.alt = image.alt || '';
-
-      // Check if the image is marked as wallpaper (full screen)
-      if (image.isWallpaper) {
-        container.className = 'wallpaper';
-      } else {
-        container.style.position = 'absolute';
-        
-        // Handle image positioning
-        if (image.position === 'center') {
-          container.style.top = '50%';
-          container.style.left = '50%';
-          container.style.transform = 'translate(-50%, -50%)';
-        } else {
-          // Expecting format "vertical-horizontal" (e.g., "bottom-right")
-          const [vertical, horizontal] = image.position.split('-');
-          container.style[vertical] = '1rem';
-          container.style[horizontal] = '1rem';
+      setInterval(updateClock, 1000);
+      updateClock();
+    }
+    
+    /******************************************************************
+     * MODULE: Background Color & Image Handling
+     ******************************************************************/
+    function initBackgroundHandlers() {
+      const savedBgColor = localStorage.getItem('bgColor');
+      if (savedBgColor) {
+        document.documentElement.style.setProperty('--bg-color', savedBgColor);
+        document.getElementById('bgColorPicker').value = savedBgColor;
+      }
+      document.getElementById('bgColorPicker').addEventListener('input', function(e) {
+        const newColor = e.target.value;
+        document.documentElement.style.setProperty('--bg-color', newColor);
+        localStorage.setItem('bgColor', newColor);
+      });
+      
+      const bgImageUpload = document.getElementById('bgImageUpload');
+      const clearBgImageBtn = document.getElementById('clearBgImage');
+      const savedBgImage = localStorage.getItem('bgImage');
+      if (savedBgImage) {
+        document.body.style.backgroundImage = `url(${savedBgImage})`;
+        document.body.style.backgroundSize = 'cover';
+      }
+      bgImageUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const dataURL = event.target.result;
+            document.body.style.backgroundImage = `url(${dataURL})`;
+            document.body.style.backgroundSize = 'cover';
+            localStorage.setItem('bgImage', dataURL);
+          }
+          reader.readAsDataURL(file);
         }
-
-        // Set dimensions if provided, or adjust based on image natural size after loading
-        if (image.width && image.height) {
-          container.style.width = image.width;
-          container.style.height = image.height;
+      });
+      clearBgImageBtn.addEventListener('click', function() {
+        document.body.style.backgroundImage = 'none';
+        localStorage.removeItem('bgImage');
+        bgImageUpload.value = '';
+      });
+    }
+    
+    /******************************************************************
+     * MODULE: Dark Mode
+     ******************************************************************/
+    function initDarkMode() {
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      if (localStorage.getItem('darkMode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+        darkModeToggle.checked = true;
+        document.documentElement.style.setProperty('--bg-color', '#121212');
+      }
+      darkModeToggle.addEventListener('change', function() {
+        if (this.checked) {
+          document.body.classList.add('dark-mode');
+          document.documentElement.style.setProperty('--bg-color', '#121212');
+          localStorage.setItem('darkMode', 'enabled');
         } else {
-          img.onload = () => {
-            container.style.width = `${img.naturalWidth}px`;
-            container.style.height = `${img.naturalHeight}px`;
-          };
+          document.body.classList.remove('dark-mode');
+          const storedColor = localStorage.getItem('bgColor') || '#faf3e0';
+          document.documentElement.style.setProperty('--bg-color', storedColor);
+          localStorage.setItem('darkMode', 'disabled');
         }
+      });
+    }
+    
+    /******************************************************************
+     * MODULE: Customizable Links
+     ******************************************************************/
+    function initCustomLinks() {
+      const storedCustomLinks = JSON.parse(localStorage.getItem('customLinks')) || [];
+      let buttons = config.defaultButtons.concat(storedCustomLinks);
+      const buttonContainer = document.getElementById('button-container');
+      
+      function renderButtons() {
+        buttonContainer.innerHTML = '';
+        buttons.forEach((btn, index) => {
+          const col = document.createElement('div');
+          col.className = 'col-auto';
+          const button = document.createElement('button');
+          // If it's a custom link, add a special class so the delete icon is positioned without affecting size.
+          if (index >= config.defaultButtons.length) {
+            button.className = 'btn btn-primary btn-custom-link';
+          } else {
+            button.className = 'btn btn-primary';
+          }
+          button.addEventListener('click', () => window.open(btn.link, '_blank'));
+          button.innerHTML = `<span>${btn.name}</span>`;
+          if (index >= config.defaultButtons.length) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerText = '×';
+            deleteBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              removeCustomLink(index - config.defaultButtons.length);
+            });
+            button.appendChild(deleteBtn);
+          }
+          col.appendChild(button);
+          buttonContainer.appendChild(col);
+        });
       }
       
-      container.appendChild(img);
-      imageWrapper.appendChild(container);
-    });
+      function removeCustomLink(customIndex) {
+        storedCustomLinks.splice(customIndex, 1);
+        localStorage.setItem('customLinks', JSON.stringify(storedCustomLinks));
+        buttons = config.defaultButtons.concat(storedCustomLinks);
+        renderButtons();
+      }
+      
+      const linkForm = document.getElementById('linkForm');
+      linkForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const linkName = document.getElementById('linkName').value.trim();
+        const linkURL = document.getElementById('linkURL').value.trim();
+        if (linkName && linkURL) {
+          const newLink = { name: linkName, link: linkURL };
+          storedCustomLinks.push(newLink);
+          localStorage.setItem('customLinks', JSON.stringify(storedCustomLinks));
+          buttons = config.defaultButtons.concat(storedCustomLinks);
+          renderButtons();
+          linkForm.reset();
+        }
+      });
+      
+      renderButtons();
+    }
+    
+    /******************************************************************
+     * MODULE: Dynamic Images
+     ******************************************************************/
+    function initDynamicImages() {
+      const images = [
+        {
+          src: 'download.jpg',
+          position: 'bottom-right',
+          width: '400px',
+          height: '400px',
+          alt: 'Wallpaper'
+        }
+      ];
+      const imageWrapper = document.getElementById('image-wrapper');
+      images.forEach(image => {
+        const container = document.createElement('div');
+        const img = document.createElement('img');
+        img.src = image.src;
+        img.alt = image.alt || '';
+        if (image.isWallpaper) {
+          container.className = 'wallpaper';
+        } else {
+          container.style.position = 'absolute';
+          if (image.position === 'center') {
+            container.style.top = '50%';
+            container.style.left = '50%';
+            container.style.transform = 'translate(-50%, -50%)';
+          } else {
+            const [vertical, horizontal] = image.position.split('-');
+            container.style[vertical] = '1rem';
+            container.style[horizontal] = '1rem';
+          }
+          if (image.width && image.height) {
+            container.style.width = image.width;
+            container.style.height = image.height;
+          } else {
+            img.onload = () => {
+              container.style.width = `${img.naturalWidth}px`;
+              container.style.height = `${img.naturalHeight}px`;
+            };
+          }
+        }
+        container.appendChild(img);
+        imageWrapper.appendChild(container);
+      });
+    }
+    
+    /******************************************************************
+     * Initialization Call
+     * WARNING: Do not change the order of initialization without ensuring
+     * module dependencies remain intact.
+     ******************************************************************/
+    init();
   </script>
 </body>
 </html>
