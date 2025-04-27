@@ -1,332 +1,444 @@
 #!/usr/bin/env python3
-
-import re
-import subprocess
-import shutil
-import mysql.connector
-import getpass
-import logging
+import os
 import sys
-import tty
-import termios
+import re
+import getpass
+import shutil
+import subprocess
+import logging
+import signal
+import asyncio
+from logging.handlers import RotatingFileHandler
+from enum import Enum
+from contextlib import contextmanager
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
 
-# --- External Live-Reload Instructions ---
-# To auto-restart on code changes, install watchdog and run:
-#   pip install watchdog
-#   watchmedo auto-restart --patterns="*.py" --recursive -- python3 game.py
+import mysql.connector
+from mysql.connector import pooling
+import aiomysql
+from pythonjsonlogger import jsonlogger
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
+from rich.console import Console
+from rich.table import Table
 
-# --- Structured Logging Setup ---
+# --- Setup console for Rich ---
+console = Console()
+
+# --- Logging Setup: Rotating and JSON-formatted ---
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-ch = logging.StreamHandler()
+ch = logging.StreamHandler(sys.stdout)
+fh = RotatingFileHandler('game.log', maxBytes=5 * 1024 * 1024, backupCount=3)
+formatter = jsonlogger.JsonFormatter('%(asctime)s %(levelname)s %(name)s %(message)s')
 ch.setFormatter(formatter)
-logger.addHandler(ch)
-fh = logging.FileHandler('game.log')
 fh.setFormatter(formatter)
+logger.addHandler(ch)
 logger.addHandler(fh)
 
-# --- Retry Decorator for DB Operations ---
-def with_retry(fn):
-    @wraps(fn)
-    def wrapper(self, *args, **kwargs):
+# --- Enums ---
+class Game(Enum):
+    ALL    = 0
+    UNO    = 1
+    CHESS  = 2
+    CARROM = 3
+
+class ServiceAction(Enum):
+    START   = 'start'
+    STOP    = 'stop'
+    RESTART = 'restart'
+    STATUS  = 'status'
+
+# --- Table configuration & validation ---
+TABLE_MAP: Dict[Game, str] = {
+    Game.UNO:    os.getenv('TABLE_UNO', 'UNO'),
+    Game.CHESS:  os.getenv('TABLE_CHESS', 'CHESS'),
+    Game.CARROM: os.getenv('TABLE_CARROM', 'CARROM'),
+}
+_table_pattern = re.compile(r'^[A-Za-z0-9_]+$')
+for tbl in TABLE_MAP.values():
+    if not _table_pattern.match(tbl):
+        logger.error('Invalid table name in TABLE_MAP: %s', tbl)
+        sys.exit(1)
+
+# --- DB Config & Connection Pool ---
+_db_pool: Optional[pooling.MySQLConnectionPool] = None
+_DB_CONFIG: Dict[str, Any] = {}
+
+def init_db_pool(host: str, port: int, user: str,
+                 password: str, database: str,
+                 pool_size: int = 5) -> None:
+    global _db_pool, _DB_CONFIG
+    _DB_CONFIG = dict(host=host, port=port, user=user,
+                      password=password, db=database)
+    try:
+        _db_pool = pooling.MySQLConnectionPool(
+            pool_name='game_pool', pool_size=pool_size,
+            host=host, port=port, user=user,
+            password=password, database=database
+        )
+        logger.info('DB pool initialized', extra={'host': host, 'db': database})
+    except mysql.connector.Error as e:
+        logger.error('Failed to initialize DB pool', extra={'error': str(e)})
+        sys.exit(2)
+
+@contextmanager
+def get_connection():
+    if _db_pool is None:
+        raise RuntimeError('DB pool not initialized')
+    conn = _db_pool.get_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# --- Utility: DB error decorator ---
+def db_op(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs):
         try:
-            return fn(self, *args, **kwargs)
-        except mysql.connector.errors.OperationalError as e:
-            logger.warning(f"DB OperationalError: {e}. Reconnecting...")
-            try:
-                self.db.reconnect(attempts=1, delay=2)
-                logger.info("Reconnected to database.")
-            except Exception as re_err:
-                logger.error(f"Reconnect failed: {re_err}")
-                raise
-            return fn(self, *args, **kwargs)
+            return func(*args, **kwargs)
+        except mysql.connector.Error as e:
+            logger.error('DB error in %s', func.__name__, extra={'error': str(e)})
+            sys.exit(2)
     return wrapper
 
-# --- Helper for Pretty-Printing Query Results ---
-def print_table(columns, rows):
-    widths = [len(col) for col in columns]
+# --- Helper: Rich table printing ---
+def rich_print_table(columns: List[str], rows: List[tuple], title: str = "") -> None:
+    table = Table(title=title, show_header=True, header_style="bold magenta")
+    for col in columns:
+        table.add_column(col)
     for row in rows:
-        for i, cell in enumerate(row):
-            widths[i] = max(widths[i], len(str(cell)))
-    sep = '+' + '+'.join('-' * (w + 2) for w in widths) + '+'
-    header = '|' + '|'.join(f' {columns[i].ljust(widths[i])} ' for i in range(len(columns))) + '|'
-    print(sep)
-    print(header)
-    print(sep)
-    for row in rows:
-        line = '|' + '|'.join(f' {str(row[i]).ljust(widths[i])} ' for i in range(len(columns))) + '|'
-        print(line)
-    print(sep)
+        table.add_row(*(str(cell) for cell in row))
+    console.print(table)
+
+# --- Async helpers for concurrency ---
+async def _async_fetch_scores(table: str) -> List[tuple]:
+    pool = await aiomysql.create_pool(minsize=1, maxsize=5, **_DB_CONFIG)
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(f"SELECT Name, Score, Code FROM `{table}`")
+            rows = await cur.fetchall()
+    pool.close()
+    await pool.wait_closed()
+    return rows
+
+async def _async_bulk_insert(table: str, data: List[tuple]) -> int:
+    pool = await aiomysql.create_pool(minsize=1, maxsize=5, **_DB_CONFIG)
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.executemany(
+                f"INSERT IGNORE INTO `{table}` (Name, Score, Code) VALUES (%s, %s, %s)",
+                data
+            )
+            await conn.commit()
+    pool.close()
+    await pool.wait_closed()
+    return len(data)
 
 # --- Scoreboard Class ---
 class Scoreboard:
-    GAME_ID = {"UNO": 1, "Chess": 2, "Carrom": 3}
+    def __init__(self):
+        self._player_cache: Dict[Game, List[str]] = {}
 
-    def __init__(self, host, user, password, database, port=3306, use_inventory=True):
-        self.db = None
-        self.host = host
-        self.user = user
-        self.password = password
-        self.database = database
-        self.port = port
-        self.use_inventory = use_inventory
-        self.connect()
+    def _get_table(self, game: Game) -> str:
+        return TABLE_MAP[game]
 
-    def connect(self):
-        self.db = mysql.connector.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database,
-            port=self.port
-        )
-        logger.info("Database connection established.")
-
-    @with_retry
-    def _get_table(self, game):
-        if self.use_inventory:
-            tbl = self._lookup_inventory(game)
-            if tbl:
-                return tbl
-        if game in self.GAME_ID:
-            return game
-        raise ValueError(f"Unknown game: {game!r}")
-
-    @with_retry
-    def _lookup_inventory(self, game):
-        with self.db.cursor() as cur:
-            cur.execute("SELECT NAME FROM Inventory WHERE ID=%s", (self.GAME_ID[game],))
-            row = cur.fetchone()
-        return row[0] if row else None
-
-    @with_retry
-    def add_score(self, game, player_name, score):
+    @db_op
+    def add_score(self, game: Game, player: str, score: int) -> None:
         tbl = self._get_table(game)
-        code = player_name[0]
-        with self.db.cursor() as cur:
-            cur.execute(f"SELECT COUNT(*) FROM `{tbl}` WHERE Code=%s", (code,))
-            (count,) = cur.fetchone()
-            if count:
-                logger.info(f"Record exists for code {code}")
-                return
-            cur.execute(f"INSERT INTO `{tbl}` (Name,Score,Code) VALUES (%s,%s,%s)", (player_name, score, code))
-        self.db.commit()
-        logger.info(f"Inserted {player_name} ({code}) with score {score} into {tbl}")
+        code = player[0].upper()
+        q = f"INSERT IGNORE INTO `{tbl}` (Name, Score, Code) VALUES (%s, %s, %s)"
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(q, (player, score, code))
+            conn.commit()
+        logger.info('Added score', extra={'game': game.name, 'player': player, 'score': score})
 
-    @with_retry
-    def show_scores(self, game):
-        tbl = self._get_table(game)
-        with self.db.cursor() as cur:
-            cur.execute(f"SELECT Name,Score,Code FROM `{tbl}`")
-            rows = cur.fetchall()
-            if not rows:
-                logger.info(f"No scores in {tbl}")
-                return
-            columns = [d[0] for d in cur.description]
-        print_table(columns, rows)
+    def show_scores(self, game: Game) -> None:
+        if game == Game.ALL:
+            tables = list(TABLE_MAP.values())
+            results = asyncio.run(asyncio.gather(*( _async_fetch_scores(tbl) for tbl in tables )))
+            for tbl_name, rows in zip(tables, results):
+                if rows:
+                    rich_print_table(['Name','Score','Code'], rows, title=tbl_name)
+                else:
+                    console.print(f"[yellow]No scores in {tbl_name}[/]")
+        else:
+            tbl = self._get_table(game)
+            rows = asyncio.run(_async_fetch_scores(tbl))
+            if rows:
+                rich_print_table(['Name','Score','Code'], rows, title=tbl)
+            else:
+                console.print(f"[yellow]No scores in {tbl}[/]")
 
-    @with_retry
-    def update_score(self, game, player_name, delta=1):
+    @db_op
+    def update_score(self, game: Game, player: str, delta: int = 1) -> None:
         tbl = self._get_table(game)
-        code = player_name[0]
-        with self.db.cursor() as cur:
-            cur.execute(f"UPDATE `{tbl}` SET Score=Score+%s WHERE Code=%s", (delta, code))
-        self.db.commit()
-        logger.info(f"Updated {tbl} code {code} by {delta}")
+        code = player[0].upper()
+        q = f"UPDATE `{tbl}` SET Score = Score + %s WHERE Code = %s"
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(q, (delta, code))
+            conn.commit()
+        logger.info('Updated score', extra={'game': game.name, 'player': player, 'delta': delta})
 
-    @with_retry
-    def reset_scores(self, game):
+    @db_op
+    def reset_scores(self, game: Game) -> None:
         tbl = self._get_table(game)
-        with self.db.cursor() as cur:
-            cur.execute(f"UPDATE `{tbl}` SET Score=0")
-        self.db.commit()
-        logger.info(f"Reset scores in {tbl}")
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(f"UPDATE `{tbl}` SET Score = 0")
+            conn.commit()
+        logger.info('Reset scores', extra={'game': game.name})
 
-    @with_retry
-    def clear_table(self, game):
+    @db_op
+    def clear_table(self, game: Game) -> None:
         tbl = self._get_table(game)
-        with self.db.cursor() as cur:
+        with get_connection() as conn, conn.cursor() as cur:
             cur.execute(f"TRUNCATE TABLE `{tbl}`")
-        self.db.commit()
-        logger.info(f"Cleared table {tbl}")
+            conn.commit()
+        logger.info('Cleared table', extra={'game': game.name})
 
-    @with_retry
-    def log_and_clear(self, game, log_table="Logs"):
+    @db_op
+    def log_and_clear(self, game: Game, log_table: str = 'Logs') -> None:
         tbl = self._get_table(game)
-        today = "CURDATE()"
-        with self.db.cursor() as cur:
-            cur.execute(f"DELETE FROM `{log_table}` WHERE Logdate={today}")
-            cur.execute(f"INSERT INTO `{log_table}` (Name,Score,Logdate) SELECT Name,Score,{today} FROM `{tbl}`")
-            cur.execute(f"UPDATE `{tbl}` SET Score=0")
-        self.db.commit()
-        logger.info(f"Logged and cleared {tbl} into {log_table}")
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(f"DELETE FROM `{log_table}` WHERE Logdate = CURDATE()")
+            cur.execute(
+                f"INSERT INTO `{log_table}` (Name, Score, Logdate) "
+                f"SELECT Name, Score, CURDATE() FROM `{tbl}`"
+            )
+            cur.execute(f"UPDATE `{tbl}` SET Score = 0")
+            conn.commit()
+        logger.info('Logged and cleared', extra={'game': game.name})
 
-# --- Service Manager Class ---
+    def get_players(self, game: Game) -> List[str]:
+        if game not in self._player_cache:
+            tbl = self._get_table(game)
+            with get_connection() as conn, conn.cursor() as cur:
+                cur.execute(f"SELECT DISTINCT Name FROM `{tbl}`")
+                self._player_cache[game] = [r[0] for r in cur.fetchall()]
+        return self._player_cache[game]
+
+# --- ServiceManager Class ---
 class ServiceManager:
-    VALID_ACTIONS = {"start","stop","restart","status"}
-    NAME_PATTERN = re.compile(r'^[\w\-]+$')
+    NAME_P = re.compile(r'^[\w\-]+$')
 
-    def __init__(self, db_conn):
-        self.db = db_conn
+    @db_op
+    def _record_status(self, base: str, status: str, restart: str) -> None:
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM Services WHERE Name = %s", (base.upper(),))
+            cur.execute(
+                "INSERT INTO Services (Name, Status, Restart) VALUES (%s, %s, %s)",
+                (base.upper(), status, restart)
+            )
+            conn.commit()
 
-    @with_retry
-    def check_service(self, name):
-        if not self.NAME_PATTERN.match(name):
-            raise ValueError("Invalid service name")
-        use_systemctl = shutil.which("systemctl") is not None
-        try:
-            if use_systemctl:
-                running = subprocess.call(["systemctl","is-active","--quiet",name])==0
-            else:
-                running = subprocess.call(["service",name,"status"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)==0
-            status, needs = ("Running","N") if running else ("Not Running","Y")
-            name_db = name.upper()[:20]
-            with self.db.cursor() as cur:
-                cur.execute("DELETE FROM Services WHERE Name=%s", (name_db,))
-                cur.execute("INSERT INTO Services (Name,Status,Restart) VALUES (%s,%s,%s)", (name_db,status,needs))
-            self.db.commit()
-            logger.info(f"Service {name_db}: {status}")
-        except Exception as db_err:
-            logger.error(f"Failed to update service status in DB: {db_err}")
-            return
-        try:
-            if use_systemctl:
-                subprocess.call(["systemctl","status",name,"--no-pager","--full"])
-            else:
-                subprocess.call(["service",name,"status"])
-        except Exception as e:
-            logger.error(f"Failed to fetch detailed status: {e}")
+    def check_status(self, raw_name: str) -> None:
+        base = raw_name[:-8] if raw_name.endswith('.service') else raw_name
+        if not self.NAME_P.match(base):
+            console.print(f"[red]Invalid service name: {raw_name}[/]")
+            sys.exit(1)
+        use_sc = shutil.which('systemctl') is not None
+        cmd_chk = ['systemctl','is-active','--quiet', raw_name] if use_sc else ['service', base, 'status']
+        up = subprocess.call(cmd_chk, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+        status, restart = ('Running','N') if up else ('Not Running','Y')
+        self._record_status(base, status, restart)
+        console.print(f"[green]{raw_name}[/]: {status}")
+        cmd_det = ['systemctl','status', raw_name, '--no-pager','--full'] if use_sc else ['service', base, 'status']
+        subprocess.call(cmd_det)
 
-    def control(self, name, action):
-        if action not in self.VALID_ACTIONS or not self.NAME_PATTERN.match(name):
-            raise ValueError("Invalid service or action")
-        cmd = ["systemctl",action,name] if shutil.which("systemctl") else ["service",name,action]
-        logger.info(f"Executing: {' '.join(cmd)}")
+    def control(self, raw_name: str, action: ServiceAction) -> None:
+        base = raw_name[:-8] if raw_name.endswith('.service') else raw_name
+        if not self.NAME_P.match(base):
+            console.print(f"[red]Invalid service name: {raw_name}[/]")
+            sys.exit(1)
+        use_sc = shutil.which('systemctl') is not None
+        cmd = ['systemctl', action.value, raw_name] if use_sc else ['service', base, action.value]
         subprocess.call(cmd)
 
-# --- Key Reader for In-Script Reload ---
-def get_key():
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
+# --- Fetch and cache services once ---
+def get_service_names() -> List[str]:
     try:
-        tty.setraw(fd)
-        ch = sys.stdin.read(1)
+        out = subprocess.check_output(
+            ['systemctl','list-unit-files','--type=service','--no-legend'],
+            text=True
+        )
+        return [line.split()[0] for line in out.splitlines() if line]
+    except Exception:
+        return []
+
+# --- SQL Prompt Helper ---
+def sql_prompt_loop() -> None:
+    assert _db_pool is not None, "DB pool not initialized"
+    conn = _db_pool.get_connection()
+    cursor = conn.cursor()
+    prompt = PromptSession('SQL> ')
+    try:
+        while True:
+            try:
+                stmt = prompt.prompt().strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+            if stmt.lower() in ('exit', 'quit', '\\q'):
+                break
+            if not stmt.endswith(';'):
+                stmt += ';'
+            try:
+                cursor.execute(stmt)
+                if cursor.with_rows:
+                    rows = cursor.fetchall()
+                    cols = [d[0] for d in cursor.description]
+                    rich_print_table(cols, rows, title="Query Result")
+                else:
+                    console.print(f"[yellow]{cursor.rowcount} rows affected.[/]")
+            except Exception as e:
+                console.print(f"[red]SQL Error:[/] {e}")
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old)
-    return ch
+        choice = PromptSession().prompt('Commit this session? [y/N]: ').strip().lower()
+        if choice == 'y':
+            conn.commit()
+        else:
+            conn.rollback()
+        cursor.close()
+        conn.close()
 
-# --- Main CLI ---
-def main():
-    host=input("MySQL Host [localhost]: ").strip() or "localhost"
-    port=int(input("MySQL Port [3306]: ").strip() or 3306)
-    user=input("MySQL User [kartik]: ").strip() or "kartik"
-    password=getpass.getpass("MySQL Password: ")
-    database=input("Database [KARTIK]: ").strip() or "KARTIK"
+# --- Graceful Shutdown ---
+def shutdown_handler(signum: int, frame: Any) -> None:
+    logger.info(f"Received signal {signum}, shutting down.")
+    sys.exit(0)
 
+signal.signal(signal.SIGINT, shutdown_handler)
+signal.signal(signal.SIGTERM, shutdown_handler)
+
+# --- Main and Menu Setup ---
+def main() -> None:
+    session = PromptSession()
+    games = [g.name for g in Game]
+    service_names = get_service_names()
+    MENU = [
+        ('1','Add score'),
+        ('2','Show scores'),
+        ('3','Update score'),
+        ('4','Reset scores'),
+        ('5','Clear table'),
+        ('6','Log & clear'),
+        ('7','Service status'),
+        ('8','Control service'),
+        ('9','SQL prompt'),
+        ('0','Exit'),
+    ]
+    games_completer   = WordCompleter(games, ignore_case=True)
+    service_completer = WordCompleter(service_names, ignore_case=True)
+    menu_completer    = WordCompleter([o for o,_ in MENU], ignore_case=True)
+
+    # DB config
+    host = os.getenv('DB_HOST') or session.prompt('DB Host [localhost]: ') or 'localhost'
+    port_str = os.getenv('DB_PORT') or session.prompt('DB Port [3306]: ') or '3306'
     try:
-        sb=Scoreboard(host,user,password,database,port)
-        with sb.db.cursor() as cur:
-            cur.execute("SELECT 1")
-            cur.fetchone()
-    except Exception as e:
-        logger.error(f"DB connection failed: {e}")
-        return
+        port = int(port_str)
+    except ValueError:
+        console.print("[red]Invalid port.[/]")
+        sys.exit(1)
+    user = os.getenv('DB_USER') or session.prompt('DB User [kartik]: ') or 'kartik'
+    pwd  = os.getenv('DB_PASSWORD') or getpass.getpass('DB Password: ')
+    db   = os.getenv('DB_NAME') or session.prompt('Database [KARTIK]: ') or 'KARTIK'
+    init_db_pool(host, port, user, pwd, db)
 
-    sm=ServiceManager(sb.db)
-    logger.info("Ready.")
+    sb = Scoreboard()
+    sm = ServiceManager()
 
+    # Choose game
     while True:
-        game=input("Which game? UNO, Chess, Carrom: ").strip()
-        try:
-            sb._get_table(game)
+        g = session.prompt('Choose game (ALL, UNO, CHESS, CARROM): ',
+                           completer=games_completer).upper()
+        if g in Game.__members__:
+            game = Game[g]
             break
-        except ValueError:
-            logger.error("Invalid game. Choose from UNO, Chess, Carrom.")
+        console.print("[red]Invalid game.[/]")
 
+    # Action functions
+    def add_action():
+        if game == Game.ALL:
+            console.print("[red]Cannot add score to ALL.[/]")
+            return
+        n = session.prompt('Player name: ')
+        s = session.prompt('Score: ')
+        sb.add_score(game, n.strip(), int(s.strip()))
+
+    def show_action(): sb.show_scores(game)
+
+    def update_action():
+        if game == Game.ALL:
+            console.print("[red]Cannot update score in ALL.[/]")
+            return
+        players = sb.get_players(game)
+        name = session.prompt('Player: ',
+                              completer=WordCompleter(players, ignore_case=True))
+        sb.update_score(game, name.strip())
+
+    def reset_action():
+        if game == Game.ALL:
+            console.print("[red]Cannot reset ALL.[/]")
+            return
+        sb.reset_scores(game)
+
+    def clear_action():
+        if game == Game.ALL:
+            console.print("[red]Cannot clear ALL.[/]")
+            return
+        sb.clear_table(game)
+
+    def log_clear_action():
+        if game == Game.ALL:
+            console.print("[red]Cannot log & clear ALL.[/]")
+            return
+        sb.log_and_clear(game)
+
+    def status_action():
+        svc = session.prompt('Service: ', completer=service_completer)
+        sm.check_status(svc.strip())
+
+    def control_action():
+        svc = session.prompt('Service: ', completer=service_completer)
+        act = session.prompt(
+            'Action (START/STOP/RESTART/STATUS): ',
+            completer=WordCompleter([a.name for a in ServiceAction], ignore_case=True)
+        )
+        sm.control(svc.strip(), ServiceAction[act.upper()])
+
+    def sql_action(): sql_prompt_loop()
+    def exit_action(): sys.exit(0)
+
+    dispatch: Dict[str, Callable[[], None]] = {
+        '1': add_action,
+        '2': show_action,
+        '3': update_action,
+        '4': reset_action,
+        '5': clear_action,
+        '6': log_clear_action,
+        '7': status_action,
+        '8': control_action,
+        '9': sql_action,
+        '0': exit_action,
+    }
+
+    def print_menu():
+        rich_print_table(['Option','Action'], MENU, title="Main Menu")
+
+    # Main loop
     while True:
-        print("""
-1) Add score  2) Show scores  3) Update score  4) Reset results
-5) Clear table  6) Log & clear  7) Service status  8) Control service
-9) SQL prompt   0) Exit
-""")
-        print("> ",end="",flush=True)
-        key=get_key()
-        print()
-        if key=='':
-            print("Reloading script...")
-            subprocess.call([sys.executable]+sys.argv)
-            sys.exit(0)
-        cmd=key
-        try:
-            if cmd=="0":
-                logger.info("Exiting.")
-                sys.exit(0)
-            elif cmd=="1":
-                n=input("Player name: ").strip()
-                s=int(input("Score: ").strip())
-                sb.add_score(game,n,s)
-            elif cmd=="2":
-                sb.show_scores(game)
-            elif cmd=="3":
-                n=input("Player: ").strip()
-                sb.update_score(game,n)
-            elif cmd=="4":
-                sb.reset_scores(game)
-            elif cmd=="5":
-                sb.clear_table(game)
-            elif cmd=="6":
-                sb.log_and_clear(game)
-            elif cmd=="7":
-                svc=input("Service: ").strip()
-                sm.check_service(svc)
-            elif cmd=="8":
-                svc=input("Service: ").strip()
-                act=input("Action (start/stop/restart/status): ").strip()
-                sm.control(svc,act)
-            elif cmd=="9":
-                conn=sb.db
-                conn.autocommit=False
-                session_log=[]
-                while True:
-                    stmt=input("SQL> ").strip()
-                    if stmt.lower() in("quit","exit"):
-                        break
-                    if not stmt.endswith(";"):
-                        stmt+=";"
-                    with conn.cursor() as c:
-                        try:
-                            c.execute(stmt)
-                            if c.with_rows:
-                                rows=c.fetchall()
-                                cols=[d[0]for d in c.description]
-                                print_table(cols,rows)
-                                session_log.append(("OK",stmt,rows))
-                            else:
-                                print(f"{c.rowcount} rows affected.")
-                                session_log.append(("OK",stmt,f"{c.rowcount} rows"))
-                        except Exception as query_err:
-                            print(f"SQL Error: {query_err}")
-                            session_log.append(("ERR",stmt,str(query_err)))
-                if session_log:
-                    if input("Commit changes? [y/N]: ").strip().lower()=='y':
-                        conn.commit()
-                        print("Transaction committed.")
-                    else:
-                        conn.rollback()
-                        print("Transaction rolled back.")
-                    if input("Save log? [Y/n]: ").strip().lower()!='n':
-                        with open('sql_session.log','w') as logf:
-                            for status,stmt,res in session_log:
-                                logf.write(f"{status}\t{stmt}\t{res}\n")
-                        print("SQL session log saved to sql_session.log")
-                    else:
-                        print("Session log discarded.")
-            else:
-                logger.error("Unknown choice")
-        except Exception as e:
-            logger.error(f"Operation failed: {e}")
+        print_menu()
+        choice = session.prompt('> ', completer=menu_completer).strip()
+        action = dispatch.get(choice)
+        if action:
+            try:
+                action()
+            except Exception as e:
+                logger.error('Operation failed', extra={'error': str(e)})
+                sys.exit(1)
+        else:
+            console.print("[red]Invalid choice[/]")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
